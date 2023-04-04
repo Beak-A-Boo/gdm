@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [ "*" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build_matrix:
+    concurrency:
+      group: ${{ github.ref }}
+      cancel-in-progress: false
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        rust: [stable]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Rust toolchain (${{ matrix.rust }})
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+          override: true
+      - name: Test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --all-features --verbose
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: gdm-${{ matrix.os }}-${{ github.sha }}
+          if-no-files-found: error
+          path: |
+            target/release/gdm
+            target/release/gdm.exe
+            target/release/gdm.pdb
