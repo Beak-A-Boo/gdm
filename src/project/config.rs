@@ -3,7 +3,7 @@ use std::{path::PathBuf, fs, io, str};
 
 use serde_derive::{Deserialize, Serialize};
 
-use super::{engine::EngineVersion, Project};
+use super::{engine::EngineVersion, Project, versions};
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct ProjectConfiguration {
@@ -47,20 +47,33 @@ impl serde::ser::Serialize for EngineDownloadSource {
     }
 }
 
-impl ProjectConfiguration {
-    pub fn new(version: String) -> ProjectConfiguration {
-        ProjectConfiguration {
-            download_source: EngineDownloadSource::GitHub,
-            mono: true,
-            version: EngineVersion::from_string(version), // TODO get latest version
+impl EngineDownloadSource {
+
+    pub async fn get_latest_version(&self) -> Result<EngineVersion, Box<dyn std::error::Error>> {
+        match self {
+            EngineDownloadSource::GitHub => Ok(versions::get_latest_version_from_github().await?),
         }
     }
+}
 
-    pub fn init(path: &PathBuf) -> Result<Project, io::Error> {
+impl ProjectConfiguration {
+    pub async fn new(version: String) -> Result<ProjectConfiguration, Box<dyn std::error::Error>> {
+
+        let download_source = EngineDownloadSource::GitHub;
+        let version = download_source.get_latest_version().await?;
+
+        Ok(ProjectConfiguration {
+            download_source,
+            mono: true,
+            version,
+        })
+    }
+
+    pub async fn init(path: &PathBuf) -> Result<Project, Box<dyn std::error::Error>> {
         match std::fs::metadata(path) {
             Ok(meta) if meta.is_file() => panic!("Path is a file, not a directory"),
             Ok(_) => { /* directory already exists */ },
-            Err(_) => std::fs::create_dir_all(path).unwrap(),
+            Err(_) => std::fs::create_dir_all(path)?,
         }
     
         let absolute_path = dunce::canonicalize(path).unwrap();
@@ -72,12 +85,11 @@ impl ProjectConfiguration {
         }
 
         let dirname = absolute_path.file_name().unwrap().to_str().unwrap().to_string();
-        println!("creating new project: {}", dirname);
 
         //TODO get latest version
         let version = "1.0.0-stable".to_string();
 
-        let config = ProjectConfiguration::new(version);
+        let config = ProjectConfiguration::new(version).await?; // TODO error handling
 
         fs::write(config_path, serde_json::to_string_pretty(&config).unwrap())?;
 
