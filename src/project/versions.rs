@@ -32,12 +32,7 @@ pub async fn get_latest_version_from_github() -> Result<EngineVersion> {
 
     if result.status().is_success() {
         let release_data = result.json::<GithubReleaseResponse>().await?;
-
-        let version = release_data.tag_name;
-
-        println!("Latest version: {}", version);
-
-        Ok(EngineVersion::from_string(version))
+        Ok(EngineVersion::from_string(release_data.tag_name))
     }
     else {
         Err(format!("Failed to get latest version from GitHub, received status code: {}", result.status()).into())
