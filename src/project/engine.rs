@@ -1,14 +1,23 @@
+use std::str::FromStr;
 use core::fmt;
 
 use serde::Serializer;
 
-#[derive(Debug)]
+#[derive(Debug, serde_with::DeserializeFromStr)]
 pub struct EngineVersion {
     pub major: u8,
     pub minor: u8,
     pub patch: u8,
 
     pub build_string: Option<String>,
+}
+
+impl FromStr for EngineVersion {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(EngineVersion::from_string(s.to_string()))
+    }
 }
 
 impl fmt::Display for EngineVersion {
@@ -34,31 +43,6 @@ impl serde::ser::Serialize for EngineVersion {
     }
 }
 
-struct EngineVersionVisitor;
-
-impl<'de> serde::de::Visitor<'de> for EngineVersionVisitor {
-    type Value = EngineVersion;
-
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        return formatter.write_str("a string");
-    }
-
-    fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
-    where
-        E: serde::de::Error,
-    {
-        Ok(EngineVersion::from_string(value.to_string()))
-    }
-}
-
-impl<'de> serde::de::Deserialize<'de> for EngineVersion {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de> {
-            return deserializer.deserialize_string(EngineVersionVisitor);
-    }
-}
-
 impl EngineVersion {
     pub fn from_string(version: String) -> EngineVersion {
         //FIXME handle case where there is no '-' in the version string
@@ -72,11 +56,11 @@ impl EngineVersion {
 
         let build_string = Some(parts.1.to_string());
 
-        return EngineVersion {
+        EngineVersion {
             major,
             minor,
             patch,
             build_string,
-        };
+        }
     }
 }
