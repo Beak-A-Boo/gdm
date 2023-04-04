@@ -16,10 +16,10 @@ impl Project {
         //TODO load config
         let config = ProjectConfiguration::new("1.0.0-stable".to_string());
 
-        return Project {
+        Project {
             name,
             path,
             config,
-        };
+        }
     }
 }

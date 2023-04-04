@@ -46,13 +46,14 @@ impl serde::ser::Serialize for EngineDownloadSource {
         serializer.serialize_str(&self.to_string())
     }
 }
+
 impl ProjectConfiguration {
     pub fn new(version: String) -> ProjectConfiguration {
-        return ProjectConfiguration {
+        ProjectConfiguration {
             download_source: EngineDownloadSource::GitHub,
             mono: true,
             version: EngineVersion::from_string(version), // TODO get latest version
-        };
+        }
     }
 
     pub fn init(path: &PathBuf) -> Result<Project, io::Error> {
@@ -80,10 +81,10 @@ impl ProjectConfiguration {
 
         fs::write(config_path, serde_json::to_string_pretty(&config).unwrap())?;
 
-        return Ok(Project {
+        Ok(Project {
             name: dirname,
             path: absolute_path.clone(),
             config,
-        });
+        })
     }
 }
