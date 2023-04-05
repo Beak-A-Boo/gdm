@@ -1,5 +1,5 @@
-use std::str::FromStr;
 use core::fmt;
+use std::str::FromStr;
 
 use serde::Serializer;
 
@@ -22,14 +22,15 @@ impl FromStr for EngineVersion {
 
 impl fmt::Display for EngineVersion {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if let Some(build_string) = &self.build_string {
-            write!(
-                f,
-                "{}.{}.{}-{}",
-                self.major, self.minor, self.patch, build_string
-            )
-        } else {
-            write!(f, "{}.{}.{}", self.major, self.minor, self.patch)
+        match &self.build_string {
+            Some(build_string) => {
+                write!(
+                    f,
+                    "{}.{}.{}-{}",
+                    self.major, self.minor, self.patch, build_string
+                )
+            }
+            None => write!(f, "{}.{}.{}", self.major, self.minor, self.patch),
         }
     }
 }
