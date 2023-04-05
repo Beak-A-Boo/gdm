@@ -1,5 +1,5 @@
 use core::fmt;
-use std::{path::PathBuf, fs, io, str};
+use std::{path::PathBuf, fs, str};
 
 use serde_derive::{Deserialize, Serialize};
 
@@ -57,10 +57,7 @@ impl EngineDownloadSource {
 }
 
 impl ProjectConfiguration {
-    pub async fn new(version: String) -> Result<ProjectConfiguration, Box<dyn std::error::Error>> {
-
-        let download_source = EngineDownloadSource::GitHub;
-        let version = download_source.get_latest_version().await?;
+    pub async fn new(version: EngineVersion, download_source: EngineDownloadSource) -> Result<ProjectConfiguration, Box<dyn std::error::Error>> {
 
         Ok(ProjectConfiguration {
             download_source,
@@ -76,7 +73,7 @@ impl ProjectConfiguration {
             Err(_) => std::fs::create_dir_all(path)?,
         }
     
-        let absolute_path = dunce::canonicalize(path).unwrap();
+        let absolute_path = dunce::canonicalize(path)?;
 
         let config_path = absolute_path.join("project.json");
 
@@ -86,10 +83,10 @@ impl ProjectConfiguration {
 
         let dirname = absolute_path.file_name().unwrap().to_str().unwrap().to_string();
 
-        //TODO get latest version
-        let version = "1.0.0-stable".to_string();
+        let source = EngineDownloadSource::GitHub;
+        let version = source.get_latest_version().await?;
 
-        let config = ProjectConfiguration::new(version).await?; // TODO error handling
+        let config = ProjectConfiguration::new(version, source).await?; // TODO error handling
 
         fs::write(config_path, serde_json::to_string_pretty(&config).unwrap())?;
 

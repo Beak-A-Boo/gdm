@@ -1,6 +1,5 @@
 use error_chain::error_chain;
 use serde::{Serialize, Deserialize};
-use serde_json::Value;
 use super::engine::EngineVersion;
 
 static APP_USER_AGENT: &str = concat!(
