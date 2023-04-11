@@ -8,10 +8,10 @@ on:
 
 jobs:
   build_matrix:
-    concurrency:
-      group: ${{ matrix.os }}
-      cancel-in-progress: true
     name: Build (${{ matrix.os }})
+    concurrency:
+      group: Build-${{ matrix.os }}
+      cancel-in-progress: true
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -21,12 +21,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Set up Rust toolchain (${{ matrix.rust }})
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
-          override: true
       - name: Cache
         uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: ${{ matrix.os }}-${{ matrix.rust }}
       - name: Test
         uses: actions-rs/cargo@v1
         with:

@@ -10,10 +10,27 @@ on:
   pull_request:
 
 jobs:
-  audit:
-    runs-on: ubuntu-latest
+  audit_matrix:
+    name: Audit
+    concurrency:
+      group: Audit
+      cancel-in-progress: true
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        rust: [stable]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/audit-check@v1
+      - uses: actions/checkout@v3
+      - name: Set up Rust toolchain (${{ matrix.rust }})
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+      - name: Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          save-if: false # don't save cache for audit runs
+          shared-key: ${{ matrix.os }}-${{ matrix.rust }}
+      - uses: rustsec/audit-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
