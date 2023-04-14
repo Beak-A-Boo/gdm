@@ -105,7 +105,7 @@ async fn main() {
             println!("Deleting all engine versions and cache...");
             let project_dirs = dirs::project_dirs();
             let mut to_delete: Vec<PathBuf> = Vec::new();
-            to_delete.push(project_dirs.data_local_dir().join("downloads"));
+            to_delete.push(project_dirs.cache_dir().to_path_buf());
             to_delete.push(project_dirs.data_local_dir().join("engines"));
 
             for path in &to_delete {

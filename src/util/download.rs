@@ -26,7 +26,7 @@ pub fn make_client() -> Result<Client, DownloadError> {
 }
 
 pub async fn download_file(url: String, local_path: &PathBuf) -> Result<u64, DownloadError> {
-    let download_dir = dirs::project_dirs().cache_dir().join("downloads");
+    let download_dir = dirs::project_dirs().cache_dir().join(".temp");
     fs::create_dir_all(&download_dir)?;
 
     if local_path.exists() {
@@ -36,7 +36,7 @@ pub async fn download_file(url: String, local_path: &PathBuf) -> Result<u64, Dow
     let mut rng = rand::thread_rng();
     let rand_int: u32 = rng.gen();
 
-    let tmp_file = download_dir.join(rand_int.to_string());
+    let tmp_file = download_dir.join(format!("download-{}", rand_int));
 
     let client = make_client()?;
     let result = client.get(&url).send().await?;
@@ -61,7 +61,16 @@ pub async fn download_file(url: String, local_path: &PathBuf) -> Result<u64, Dow
         }
         pb.set_position(total_size);
         pb.finish_with_message(format!("Downloaded {} bytes", downloaded));
-        fs::rename(tmp_file, local_path)?;
+        local_path
+            .parent()
+            .map(|p| fs::create_dir_all(p))
+            .expect("Unable to create target directory")?;
+        fs::rename(&tmp_file, local_path)?;
+        tmp_file
+            .parent()
+            .map(|p| fs::remove_dir_all(p))
+            .expect("Unable to remove temp directory")
+            .unwrap_or_default();
         Ok(downloaded)
     } else {
         Err(DownloadError::Unknown) //TODO status code error?
