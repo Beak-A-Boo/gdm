@@ -1,13 +1,12 @@
 use core::fmt;
-use std::{path::PathBuf, fs, str};
+use std::{fs, path::PathBuf, str};
 
 use serde_derive::{Deserialize, Serialize};
 
-use super::{engine::EngineVersion, Project, versions};
+use super::{engine::EngineVersion, versions, Project};
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct ProjectConfiguration {
-
     pub download_source: EngineDownloadSource,
     pub version: EngineVersion,
     pub mono: bool,
@@ -42,13 +41,13 @@ impl str::FromStr for EngineDownloadSource {
 impl serde::ser::Serialize for EngineDownloadSource {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: serde::Serializer {
+        S: serde::Serializer,
+    {
         serializer.serialize_str(&self.to_string())
     }
 }
 
 impl EngineDownloadSource {
-
     pub async fn get_latest_version(&self) -> Result<EngineVersion, Box<dyn std::error::Error>> {
         match self {
             EngineDownloadSource::GitHub => Ok(versions::get_latest_version_from_github().await?),
@@ -57,8 +56,10 @@ impl EngineDownloadSource {
 }
 
 impl ProjectConfiguration {
-    pub async fn new(version: EngineVersion, download_source: EngineDownloadSource) -> Result<ProjectConfiguration, Box<dyn std::error::Error>> {
-
+    pub async fn new(
+        version: EngineVersion,
+        download_source: EngineDownloadSource,
+    ) -> Result<ProjectConfiguration, Box<dyn std::error::Error>> {
         Ok(ProjectConfiguration {
             download_source,
             mono: true,
@@ -69,10 +70,10 @@ impl ProjectConfiguration {
     pub async fn init(path: &PathBuf) -> Result<Project, Box<dyn std::error::Error>> {
         match std::fs::metadata(path) {
             Ok(meta) if meta.is_file() => panic!("Path is a file, not a directory"),
-            Ok(_) => { /* directory already exists */ },
+            Ok(_) => { /* directory already exists */ }
             Err(_) => std::fs::create_dir_all(path)?,
         }
-    
+
         let absolute_path = dunce::canonicalize(path)?;
 
         let config_path = absolute_path.join("project.json");
@@ -81,7 +82,12 @@ impl ProjectConfiguration {
             panic!("Project already exists"); // TODO error handling
         }
 
-        let dirname = absolute_path.file_name().unwrap().to_str().unwrap().to_string();
+        let dirname = absolute_path
+            .file_name()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string();
 
         let source = EngineDownloadSource::GitHub;
         let version = source.get_latest_version().await?;

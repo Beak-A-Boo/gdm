@@ -3,6 +3,7 @@ mod util;
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
+use directories::{BaseDirs, ProjectDirs, UserDirs};
 use path_clean::PathClean;
 
 use crate::project::config::ProjectConfiguration;
@@ -19,11 +20,14 @@ struct Cli {
 enum Commands {
     Upgrade,
     #[clap()]
-    Set { version: String },
+    Set {
+        version: String,
+    },
 
     #[clap(about = "Initialize a new project")]
-    Init { path: Option<PathBuf> },
-
+    Init {
+        path: Option<PathBuf>,
+    },
     // Engine {
     //     #[command(subcommand)]
     //     command: EngineCommands,
@@ -31,13 +35,14 @@ enum Commands {
 }
 
 #[derive(Subcommand)]
-enum EngineCommands {
-
-}
+enum EngineCommands {}
 
 #[tokio::main]
 async fn main() {
     let cli = Cli::parse();
+
+    // empty strings for qualifier and org name are fine
+
     match cli.command {
         Commands::Upgrade => println!("Upgrade"),
         Commands::Set { version } => println!("Set: {}", version),
@@ -46,18 +51,24 @@ async fn main() {
 
             match project::Project::load(&actual_path) {
                 Ok(project) => {
-                    println!("Found existing project: {}, Godot Engine v{}, aborting!", &project.name.to_string(), project.config.version.to_string());
-                },
-                Err(_e) => {
-                    match ProjectConfiguration::init(&actual_path).await {
-                        Ok(project) => {
-                            println!("Successfully initialized new project: {}, Godot Engine v{}", &project.name.to_string(), project.config.version.to_string());
-                        },
-                        Err(e) => panic!("Error: {}", e),
-                    }
+                    println!(
+                        "Found existing project: {}, Godot Engine v{}, aborting!",
+                        &project.name.to_string(),
+                        project.config.version.to_string()
+                    );
                 }
+                Err(_e) => match ProjectConfiguration::init(&actual_path).await {
+                    Ok(project) => {
+                        println!(
+                            "Successfully initialized new project: {}, Godot Engine v{}",
+                            &project.name.to_string(),
+                            project.config.version.to_string()
+                        );
+                    }
+                    Err(e) => panic!("Error: {}", e),
+                },
             }
-        },
+        }
         // Commands::Engine { command } => match command {
         //     EngineCommands::Help => println!("Engine Help"),
         //     EngineCommands::Upgrade => println!("Engine Upgrade"),

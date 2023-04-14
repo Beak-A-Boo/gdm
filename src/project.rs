@@ -1,4 +1,4 @@
-use std::{path::PathBuf, fs};
+use std::{fs, path::PathBuf};
 
 pub mod config;
 pub mod engine;
@@ -20,10 +20,19 @@ impl Project {
             panic!("Project does not exist"); // TODO error handling
         }
 
-        let project_name = absolute_path.file_name().unwrap().to_str().unwrap().to_string();
+        let project_name = absolute_path
+            .file_name()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string();
 
         let config = serde_json::from_str(&fs::read_to_string(config_path)?)?;
 
-        Ok(Project { name: project_name, path: path.clone(), config, })
+        Ok(Project {
+            name: project_name,
+            path: path.clone(),
+            config,
+        })
     }
 }

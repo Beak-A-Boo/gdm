@@ -52,11 +52,16 @@ impl EngineVersion {
         };
         let build_string = build.map(|s| s.to_owned());
         let mut version = version.splitn(3, '.');
-        
+
         let major = version.next().and_then(|n| u8::from_str(n).ok()).unwrap();
         let minor = version.next().and_then(|n| u8::from_str(n).ok()).unwrap();
         let patch = version.next().and_then(|n| u8::from_str(n).ok()).unwrap();
-        
-        Self { major, minor, patch, build_string }
+
+        Self {
+            major,
+            minor,
+            patch,
+            build_string,
+        }
     }
 }
