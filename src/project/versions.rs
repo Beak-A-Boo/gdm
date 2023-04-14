@@ -45,7 +45,7 @@ pub async fn ensure_version_installed(
     if mono {
         engine_name.push_str("-mono");
     }
-    let engine_dir = dirs.data_local_dir().join("engines").join(&engine_name);
+    let engine_dir = dirs.data_local_dir().join("downloads").join(&engine_name);
 
     let filename = format!("Godot_v{}_{}.zip", version.to_string(), os_string);
     let filepath = engine_dir.join(&filename);
@@ -54,7 +54,13 @@ pub async fn ensure_version_installed(
         println!("Could not find matching version of Godot engine locally, downloading...");
         fs::create_dir_all(&engine_dir)?;
         download_from_github(&filepath, filename, version).await?;
+
         //TODO unzip
+        println!("Extracting archive...");
+
+        //TODO delete zip after extracting
+        println!("Reclaiming disk space...");
+
         println!(
             "Successfully installed Godot engine version {}",
             &engine_name
