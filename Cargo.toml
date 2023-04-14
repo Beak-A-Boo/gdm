@@ -30,3 +30,4 @@ serde_json = "1.0.95"
 serde_with = "2.3.1"
 thiserror = "1.0.40"
 tokio = { version = "1.27.0", features = ["full"] }
+zip = "0.6.4"

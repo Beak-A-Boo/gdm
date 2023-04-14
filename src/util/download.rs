@@ -18,6 +18,8 @@ pub enum DownloadError {
     HttpError(#[from] reqwest::Error),
     #[error("Unknown Error")]
     Unknown,
+    #[error("Zip Error")]
+    ZipError(#[from] zip::result::ZipError),
 }
 
 pub fn make_client() -> Result<Client, DownloadError> {
@@ -66,11 +68,6 @@ pub async fn download_file(url: String, local_path: &PathBuf) -> Result<u64, Dow
             .map(|p| fs::create_dir_all(p))
             .expect("Unable to create target directory")?;
         fs::rename(&tmp_file, local_path)?;
-        tmp_file
-            .parent()
-            .map(|p| fs::remove_dir_all(p))
-            .expect("Unable to remove temp directory")
-            .unwrap_or_default();
         Ok(downloaded)
     } else {
         Err(DownloadError::Unknown) //TODO status code error?

@@ -1,9 +1,6 @@
 use std::{fs, path::PathBuf};
 
-use crate::util::{
-    dirs,
-    download::{self},
-};
+use crate::util::{dirs, download};
 
 use super::engine::EngineVersion;
 use serde::{Deserialize, Serialize};
@@ -58,9 +55,16 @@ pub async fn ensure_version_installed(
         //TODO unzip
         println!("Extracting archive...");
         fs::create_dir_all(&engine_dir)?;
+        let mut archive = zip::ZipArchive::new(fs::File::open(&filepath)?)?;
 
-        //TODO delete zip after extracting
+        //TODO manually extract files, skip top-level directory
+        archive.extract(&engine_dir)?;
+
         println!("Reclaiming disk space...");
+        let tmp_dir = dirs::project_dirs().cache_dir().join(".temp");
+        if tmp_dir.is_dir() {
+            fs::remove_dir_all(tmp_dir)?;
+        }
 
         println!(
             "Successfully installed Godot engine version {}",
