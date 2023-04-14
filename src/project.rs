@@ -17,7 +17,7 @@ impl Project {
         let config_path = absolute_path.join("project.json");
 
         if !config_path.exists() {
-            panic!("Project does not exist"); // TODO error handling
+            return Err("Project does not exist".into()); // TODO error handling
         }
 
         let project_name = absolute_path

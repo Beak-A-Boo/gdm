@@ -69,7 +69,7 @@ impl ProjectConfiguration {
 
     pub async fn init(path: &PathBuf) -> Result<Project, Box<dyn std::error::Error>> {
         match std::fs::metadata(path) {
-            Ok(meta) if meta.is_file() => panic!("Path is a file, not a directory"),
+            Ok(meta) if meta.is_file() => panic!("Path is a file, not a directory"), //TODO error handling
             Ok(_) => { /* directory already exists */ }
             Err(_) => std::fs::create_dir_all(path)?,
         }
@@ -79,7 +79,7 @@ impl ProjectConfiguration {
         let config_path = absolute_path.join("project.json");
 
         if config_path.exists() {
-            panic!("Project already exists"); // TODO error handling
+            return Err("Project already exists".into());
         }
 
         let dirname = absolute_path
