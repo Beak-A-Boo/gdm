@@ -39,3 +39,4 @@ jobs:
           if-no-files-found: error
           path: |
             target/release/gdm*
+            !target/release/gdm*.d
