@@ -1,6 +1,6 @@
 mod project;
 mod util;
-use std::path::PathBuf;
+use std::{fs, path::PathBuf};
 
 use clap::{Parser, Subcommand};
 
@@ -33,10 +33,13 @@ enum Commands {
     #[clap(about = "Launch Godot Engine")]
     Run {
         path: Option<PathBuf>,
-    }, // Engine {
-       //     #[command(subcommand)]
-       //     command: EngineCommands,
-       // },
+    },
+    #[clap(about = "Uninstall all engine versions and clear download cache")]
+    Clean,
+    // Engine {
+    //     #[command(subcommand)]
+    //     command: EngineCommands,
+    // },
 }
 
 #[derive(Subcommand)]
@@ -61,7 +64,7 @@ async fn main() {
                 }
                 Err(e) => panic!("Error: {}", e),
             }
-        },
+        }
         Commands::Init { path } => {
             let actual_path = dirs::get_actual_path(path);
 
@@ -97,6 +100,21 @@ async fn main() {
                 }
                 Err(e) => panic!("Error: {}", e),
             }
+        }
+        Commands::Clean => {
+            println!("Deleting all engine versions and cache...");
+            let project_dirs = dirs::project_dirs();
+            let mut to_delete: Vec<PathBuf> = Vec::new();
+            to_delete.push(project_dirs.data_local_dir().join("downloads"));
+            to_delete.push(project_dirs.data_local_dir().join("engines"));
+
+            for path in &to_delete {
+                if path.is_dir() {
+                    fs::remove_dir_all(path).unwrap();
+                }
+            }
+
+            println!("Done!");
         }
         // Commands::Engine { command } => match command {
         //     EngineCommands::Help => println!("Engine Help"),
