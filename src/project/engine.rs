@@ -45,23 +45,18 @@ impl serde::ser::Serialize for EngineVersion {
 }
 
 impl EngineVersion {
-    pub fn from_string(version: String) -> EngineVersion {
-        //FIXME handle case where there is no '-' in the version string
-        let parts = version.split_once('-').unwrap();
-
-        let split: Vec<&str> = parts.0.splitn(3, ".").collect();
-
-        let major = split.get(0).unwrap().parse::<u8>().unwrap();
-        let minor = split.get(1).unwrap().parse::<u8>().unwrap();
-        let patch = split.get(2).unwrap().parse::<u8>().unwrap();
-
-        let build_string = Some(parts.1.to_string());
-
-        EngineVersion {
-            major,
-            minor,
-            patch,
-            build_string,
-        }
+    pub fn from_string(s: String) -> EngineVersion {
+        let (version, build) = match s.split_once('-') {
+            Some((version, build)) => (version, Some(build)),
+            None => (s.as_str(), None),
+        };
+        let build_string = build.map(|s| s.to_owned());
+        let mut version = version.splitn(3, '.');
+        
+        let major = version.next().and_then(|n| u8::from_str(n).ok()).unwrap();
+        let minor = version.next().and_then(|n| u8::from_str(n).ok()).unwrap();
+        let patch = version.next().and_then(|n| u8::from_str(n).ok()).unwrap();
+        
+        Self { major, minor, patch, build_string }
     }
 }
