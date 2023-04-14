@@ -55,6 +55,11 @@ async fn main() {
             match project::Project::load(&actual_path) {
                 Ok(mut project) => {
                     project.config.version = EngineVersion::from_string(version);
+                    project.save().unwrap();
+                    println!(
+                        "Successfully set Godot Engine version to {}",
+                        project.config.version.to_string()
+                    );
                 }
                 Err(e) => panic!("Error: {}", e),
             }
