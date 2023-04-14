@@ -3,8 +3,9 @@ mod util;
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
-use directories::{BaseDirs, ProjectDirs, UserDirs};
-use path_clean::PathClean;
+
+use project::{engine::EngineVersion, versions};
+use util::dirs;
 
 use crate::project::config::ProjectConfiguration;
 
@@ -22,16 +23,20 @@ enum Commands {
     #[clap()]
     Set {
         version: String,
+        path: Option<PathBuf>,
     },
 
     #[clap(about = "Initialize a new project")]
     Init {
         path: Option<PathBuf>,
     },
-    // Engine {
-    //     #[command(subcommand)]
-    //     command: EngineCommands,
-    // },
+    #[clap(about = "Launch Godot Engine")]
+    Run {
+        path: Option<PathBuf>,
+    }, // Engine {
+       //     #[command(subcommand)]
+       //     command: EngineCommands,
+       // },
 }
 
 #[derive(Subcommand)]
@@ -45,9 +50,17 @@ async fn main() {
 
     match cli.command {
         Commands::Upgrade => println!("Upgrade"),
-        Commands::Set { version } => println!("Set: {}", version),
+        Commands::Set { version, path } => {
+            let actual_path = dirs::get_actual_path(path);
+            match project::Project::load(&actual_path) {
+                Ok(mut project) => {
+                    project.config.version = EngineVersion::from_string(version);
+                }
+                Err(e) => panic!("Error: {}", e),
+            }
+        },
         Commands::Init { path } => {
-            let actual_path = path.unwrap_or_else(|| PathBuf::from(".")).clean();
+            let actual_path = dirs::get_actual_path(path);
 
             match project::Project::load(&actual_path) {
                 Ok(project) => {
@@ -67,6 +80,19 @@ async fn main() {
                     }
                     Err(e) => panic!("Error: {}", e),
                 },
+            }
+        }
+        Commands::Run { path } => {
+            let actual_path = dirs::get_actual_path(path);
+
+            match project::Project::load(&actual_path) {
+                Ok(project) => {
+                    versions::ensure_version_installed(project.config.version, project.config.mono)
+                        .await
+                        .unwrap();
+                    //TODO launch godot engine
+                }
+                Err(e) => panic!("Error: {}", e),
             }
         }
         // Commands::Engine { command } => match command {

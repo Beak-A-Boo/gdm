@@ -25,11 +25,11 @@ pub fn make_client() -> Result<Client, DownloadError> {
     Ok(client)
 }
 
-pub async fn download_file(url: String, local_path: String) -> Result<u64, DownloadError> {
+pub async fn download_file(url: String, local_path: &PathBuf) -> Result<u64, DownloadError> {
     let download_dir = dirs::project_dirs().cache_dir().join("downloads");
     fs::create_dir_all(&download_dir)?;
 
-    if PathBuf::from(&local_path).exists() {
+    if local_path.exists() {
         fs::remove_file(&local_path)?;
     }
 

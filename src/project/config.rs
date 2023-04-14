@@ -1,5 +1,5 @@
 use core::fmt;
-use std::{fs, path::PathBuf, str};
+use std::{path::PathBuf, str};
 
 use serde_derive::{Deserialize, Serialize};
 
@@ -94,12 +94,14 @@ impl ProjectConfiguration {
 
         let config = ProjectConfiguration::new(version, source).await?; // TODO error handling
 
-        fs::write(config_path, serde_json::to_string_pretty(&config).unwrap())?;
-
-        Ok(Project {
+        let project = Project {
             name: dirname,
             path: absolute_path.clone(),
             config,
-        })
+        };
+
+        project.save()?;
+
+        Ok(project)
     }
 }

@@ -35,4 +35,14 @@ impl Project {
             config,
         })
     }
+
+    pub fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let config_path = self.path.join("project.json");
+
+        let config = serde_json::to_string_pretty(&self.config)?;
+
+        fs::write(config_path, config)?;
+
+        Ok(())
+    }
 }
