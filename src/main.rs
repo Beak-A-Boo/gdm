@@ -93,10 +93,9 @@ async fn main() {
 
             match project::Project::load(&actual_path) {
                 Ok(project) => {
-                    versions::ensure_version_installed(project.config.version, project.config.mono)
-                        .await
-                        .unwrap();
-                    //TODO launch godot engine
+                    versions::ensure_version_installed(&project.config).await.unwrap();
+                    project.run().await.unwrap();
+
                 }
                 Err(e) => panic!("Error: {}", e),
             }

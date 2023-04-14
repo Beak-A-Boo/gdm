@@ -6,7 +6,7 @@ use rand::Rng;
 use reqwest::Client;
 use thiserror::Error;
 
-use super::dirs;
+use super::{archive, dirs};
 
 static APP_USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
 
@@ -20,6 +20,8 @@ pub enum DownloadError {
     Unknown,
     #[error("Zip Error")]
     ZipError(#[from] zip::result::ZipError),
+    #[error("Zip Extract Error")]
+    ExtraftError(#[from] archive::ExtractError),
 }
 
 pub fn make_client() -> Result<Client, DownloadError> {

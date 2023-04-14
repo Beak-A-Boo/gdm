@@ -1,8 +1,8 @@
 use std::{fs, path::PathBuf};
 
-use crate::util::{dirs, download};
+use crate::util::{archive, dirs, download};
 
-use super::engine::EngineVersion;
+use super::{config::ProjectConfiguration, engine::EngineVersion};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -20,7 +20,7 @@ pub async fn get_latest_version_from_github() -> Result<EngineVersion, download:
 pub async fn download_from_github(
     path: &PathBuf,
     filename: String,
-    version: EngineVersion,
+    version: &EngineVersion,
 ) -> Result<u64, download::DownloadError> {
     let url = format!(
         "https://github.com/godotengine/godot/releases/download/{}/{}",
@@ -30,35 +30,25 @@ pub async fn download_from_github(
 }
 
 pub async fn ensure_version_installed(
-    version: EngineVersion,
-    mono: bool,
+    config: &ProjectConfiguration,
 ) -> Result<(), download::DownloadError> {
-    let mut os_string = "win64.exe";
-    if mono {
-        os_string = "mono_win64";
-    }
+    let engine_name = config.get_engine_name();
+
     let dirs = dirs::project_dirs();
-    let mut engine_name = version.to_string();
-    if mono {
-        engine_name.push_str("-mono");
-    }
+
     let engine_dir = dirs.data_local_dir().join("engines").join(&engine_name);
+    let engine_file = engine_dir.join(format!("{}.exe", &engine_name));
 
-    let filename = format!("Godot_v{}_{}.zip", version.to_string(), os_string);
-
-    let filepath = dirs.cache_dir().join("engines").join(&filename);
-
-    if !engine_dir.is_dir() {
+    if !engine_file.exists() {
         println!("Could not find matching version of Godot engine locally, downloading...");
-        download_from_github(&filepath, filename, version).await?;
 
-        //TODO unzip
+        let zip_file_name = format!("{}.zip", &engine_name);
+        let zip_file_path = dirs.cache_dir().join("engines").join(&zip_file_name);
+
+        download_from_github(&zip_file_path, zip_file_name, &config.to_owned().version).await?;
+
         println!("Extracting archive...");
-        fs::create_dir_all(&engine_dir)?;
-        let mut archive = zip::ZipArchive::new(fs::File::open(&filepath)?)?;
-
-        //TODO manually extract files, skip top-level directory
-        archive.extract(&engine_dir)?;
+        archive::extract(&zip_file_path, &engine_dir, Some(true))?;
 
         println!("Reclaiming disk space...");
         let tmp_dir = dirs::project_dirs().cache_dir().join(".temp");

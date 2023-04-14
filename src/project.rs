@@ -1,5 +1,7 @@
 use std::{fs, path::PathBuf};
 
+use crate::util::dirs;
+
 pub mod config;
 pub mod engine;
 pub mod versions;
@@ -42,6 +44,31 @@ impl Project {
         let config = serde_json::to_string_pretty(&self.config)?;
 
         fs::write(config_path, config)?;
+
+        Ok(())
+    }
+
+    pub async fn run(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let project_file = self.path.join("project.godot");
+        if !project_file.exists() {
+            println!("No project.godot file found, creating one...");
+            fs::write(project_file, "").unwrap();
+        }
+
+        let dirs = dirs::project_dirs();
+        let engine_name = self.config.get_engine_name();
+
+        //TODO os-dependent engine path
+        let engine_path = dirs
+            .data_local_dir()
+            .join("engines")
+            .join(&engine_name)
+            .join(format!("{}.exe", &engine_name));
+
+        let mut command = std::process::Command::new(engine_path);
+        command.arg("-e");
+        command.current_dir(&self.path);
+        command.spawn()?;
 
         Ok(())
     }
