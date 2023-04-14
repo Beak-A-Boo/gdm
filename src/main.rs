@@ -46,8 +46,6 @@ enum EngineCommands {}
 async fn main() {
     let cli = Cli::parse();
 
-    // empty strings for qualifier and org name are fine
-
     match cli.command {
         Commands::Upgrade => println!("Upgrade"),
         Commands::Set { version, path } => {

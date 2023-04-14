@@ -4,6 +4,7 @@ use directories::ProjectDirs;
 use path_clean::PathClean;
 
 pub fn project_dirs() -> ProjectDirs {
+    // empty strings for qualifier and org name are fine
     ProjectDirs::from("", "", "gdm").unwrap()
 }
 
