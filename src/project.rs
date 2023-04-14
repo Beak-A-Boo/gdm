@@ -1,6 +1,4 @@
-use std::path::PathBuf;
-
-use self::{config::{ProjectConfiguration, EngineDownloadSource}, engine::EngineVersion};
+use std::{path::PathBuf, fs};
 
 pub mod config;
 pub mod engine;
@@ -13,14 +11,19 @@ pub struct Project {
 }
 
 impl Project {
-    pub async fn new(name: String, path: PathBuf) -> Result<Project, Box<dyn std::error::Error>> {
-        //TODO load config
-        let config = ProjectConfiguration::new(EngineVersion::from_string("1.0.0-stable".to_string()), EngineDownloadSource::GitHub).await?;
+    pub fn load(path: &PathBuf) -> Result<Project, Box<dyn std::error::Error>> {
+        let absolute_path = dunce::canonicalize(path)?;
 
-        Ok(Project {
-            name,
-            path,
-            config,
-        })
+        let config_path = absolute_path.join("project.json");
+
+        if !config_path.exists() {
+            panic!("Project does not exist"); // TODO error handling
+        }
+
+        let project_name = absolute_path.file_name().unwrap().to_str().unwrap().to_string();
+
+        let config = serde_json::from_str(&fs::read_to_string(config_path)?)?;
+
+        Ok(Project { name: project_name, path: path.clone(), config, })
     }
 }

@@ -38,18 +38,24 @@ enum EngineCommands {
 #[tokio::main]
 async fn main() {
     let cli = Cli::parse();
-
     match cli.command {
         Commands::Upgrade => println!("Upgrade"),
         Commands::Set { version } => println!("Set: {}", version),
         Commands::Init { path } => {
             let actual_path = path.unwrap_or_else(|| PathBuf::from(".")).clean();
-            
-            match ProjectConfiguration::init(&actual_path).await {
+
+            match project::Project::load(&actual_path) {
                 Ok(project) => {
-                    println!("Successfully initialized new project: {}, Godot Engine v{}", &project.name.to_string(), project.config.version.to_string());
+                    println!("Found existing project: {}, Godot Engine v{}, aborting!", &project.name.to_string(), project.config.version.to_string());
                 },
-                Err(e) => panic!("Error: {}", e),
+                Err(_e) => {
+                    match ProjectConfiguration::init(&actual_path).await {
+                        Ok(project) => {
+                            println!("Successfully initialized new project: {}, Godot Engine v{}", &project.name.to_string(), project.config.version.to_string());
+                        },
+                        Err(e) => panic!("Error: {}", e),
+                    }
+                }
             }
         },
         // Commands::Engine { command } => match command {
