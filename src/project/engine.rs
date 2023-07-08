@@ -5,10 +5,8 @@ use serde::Serializer;
 
 #[derive(Debug, serde_with::DeserializeFromStr)]
 pub struct EngineVersion {
-    pub major: u8,
-    pub minor: u8,
-    pub patch: u8,
-
+    
+    pub version_string: String,
     pub build_string: Option<String>,
 }
 
@@ -26,11 +24,11 @@ impl fmt::Display for EngineVersion {
             Some(build_string) => {
                 write!(
                     f,
-                    "{}.{}.{}-{}",
-                    self.major, self.minor, self.patch, build_string
+                    "{}-{}",
+                    self.version_string, build_string
                 )
             }
-            None => write!(f, "{}.{}.{}", self.major, self.minor, self.patch),
+            None => write!(f, "{}", self.version_string),
         }
     }
 }
@@ -51,16 +49,8 @@ impl EngineVersion {
             None => (s.as_str(), None),
         };
         let build_string = build.map(|s| s.to_owned());
-        let mut version = version.splitn(3, '.');
-
-        let major = version.next().and_then(|n| u8::from_str(n).ok()).unwrap();
-        let minor = version.next().and_then(|n| u8::from_str(n).ok()).unwrap();
-        let patch = version.next().and_then(|n| u8::from_str(n).ok()).unwrap();
-
         Self {
-            major,
-            minor,
-            patch,
+            version_string: version.to_string(),
             build_string,
         }
     }

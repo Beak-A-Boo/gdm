@@ -7,7 +7,7 @@ use clap::{Parser, Subcommand};
 use project::{engine::EngineVersion, versions};
 use util::dirs;
 
-use crate::project::config::ProjectConfiguration;
+use crate::project::config::{ProjectConfiguration, EngineDownloadSource};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -19,7 +19,10 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    Upgrade,
+    #[clap(about = "Upgrade Godot Engine to the latest version")]
+    Upgrade {
+        path: Option<PathBuf>,
+    },
     #[clap()]
     Set {
         version: String,
@@ -50,7 +53,42 @@ async fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Upgrade => println!("Upgrade"),
+        Commands::Upgrade { path } => {
+            let actual_path = dirs::get_actual_path(path);
+            match project::Project::load(&actual_path) {
+                Ok(mut project) => {
+                    println!(
+                        "Found existing project: {}, Godot Engine v{}!",
+                        &project.name.to_string(),
+                        project.config.version.to_string()
+                    );
+                    match project.config.download_source.get_latest_version().await {
+                        Ok(version) => {
+                            println!("Found latest version: {}", version.to_string());
+                            if version.to_string() != project.config.version.to_string() {
+                                project.config.version = version;
+                                project.save().unwrap();
+                                println!("Successfully upgraded Godot Engine to v{}", project.config.version.to_string());
+                            } else {
+                                println!("Project is already up to date!");
+                            }
+                        },
+                        Err(e) => panic!("Error: {}", e),
+                    }
+
+                }
+                Err(_e) => match ProjectConfiguration::init(&actual_path).await {
+                    Ok(project) => {
+                        println!(
+                            "Successfully initialized new project: {}, Godot Engine v{}",
+                            &project.name.to_string(),
+                            project.config.version.to_string()
+                        );
+                    }
+                    Err(e) => panic!("Error: {}", e),
+                },
+            }
+        },
         Commands::Set { version, path } => {
             let actual_path = dirs::get_actual_path(path);
             match project::Project::load(&actual_path) {
