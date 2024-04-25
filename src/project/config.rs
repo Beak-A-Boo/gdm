@@ -1,9 +1,10 @@
 use core::fmt;
 use std::{path::PathBuf, str};
 
+use anyhow::bail;
 use serde_derive::{Deserialize, Serialize};
 
-use super::{engine::EngineVersion, versions, Project};
+use super::{engine::EngineVersion, Project, versions};
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct ProjectConfiguration {
@@ -48,7 +49,7 @@ impl serde::ser::Serialize for EngineDownloadSource {
 }
 
 impl EngineDownloadSource {
-    pub async fn get_latest_version(&self) -> Result<EngineVersion, Box<dyn std::error::Error>> {
+    pub async fn get_latest_version(&self) -> anyhow::Result<EngineVersion> {
         match self {
             EngineDownloadSource::GitHub => Ok(versions::get_latest_version_from_github().await?),
         }
@@ -59,7 +60,7 @@ impl ProjectConfiguration {
     pub async fn new(
         version: EngineVersion,
         download_source: EngineDownloadSource,
-    ) -> Result<ProjectConfiguration, Box<dyn std::error::Error>> {
+    ) -> anyhow::Result<ProjectConfiguration> {
         Ok(ProjectConfiguration {
             download_source,
             mono: true,
@@ -67,7 +68,7 @@ impl ProjectConfiguration {
         })
     }
 
-    pub async fn init(path: &PathBuf) -> Result<Project, Box<dyn std::error::Error>> {
+    pub async fn init(path: &PathBuf) -> anyhow::Result<Project> {
         match std::fs::metadata(path) {
             Ok(meta) if meta.is_file() => panic!("Path is a file, not a directory"), //TODO error handling
             Ok(_) => { /* directory already exists */ }
@@ -79,7 +80,7 @@ impl ProjectConfiguration {
         let config_path = absolute_path.join("project.json");
 
         if config_path.exists() {
-            return Err("Project already exists".into());
+            bail!("Project already exists");
         }
 
         let dirname = absolute_path

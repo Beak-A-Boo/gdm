@@ -1,5 +1,3 @@
-mod project;
-mod util;
 use std::{fs, path::PathBuf};
 
 use clap::{Parser, Subcommand};
@@ -7,7 +5,10 @@ use clap::{Parser, Subcommand};
 use project::{engine::EngineVersion, versions};
 use util::dirs;
 
-use crate::project::config::{ProjectConfiguration, EngineDownloadSource};
+use crate::project::config::ProjectConfiguration;
+
+mod project;
+mod util;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -49,7 +50,7 @@ enum Commands {
 enum EngineCommands {}
 
 #[tokio::main]
-async fn main() {
+async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
@@ -62,46 +63,42 @@ async fn main() {
                         &project.name.to_string(),
                         project.config.version.to_string()
                     );
-                    match project.config.download_source.get_latest_version().await {
-                        Ok(version) => {
-                            println!("Found latest version: {}", version.to_string());
-                            if version.to_string() != project.config.version.to_string() {
-                                project.config.version = version;
-                                project.save().unwrap();
-                                println!("Successfully upgraded Godot Engine to v{}", project.config.version.to_string());
-                            } else {
-                                println!("Project is already up to date!");
-                            }
-                        },
-                        Err(e) => panic!("Error: {}", e),
+                    let version = project.config.download_source.get_latest_version().await?;
+                    println!("Found latest version: {}", version.to_string());
+                    if version.to_string() != project.config.version.to_string() {
+                        project.config.version = version;
+                        project.save()?;
+                        println!("Successfully upgraded Godot Engine to v{}", project.config.version.to_string());
+                    } else {
+                        println!("Project is already up to date!");
                     }
 
+                    Ok(())
+
                 }
-                Err(_e) => match ProjectConfiguration::init(&actual_path).await {
-                    Ok(project) => {
-                        println!(
-                            "Successfully initialized new project: {}, Godot Engine v{}",
-                            &project.name.to_string(),
-                            project.config.version.to_string()
-                        );
-                    }
-                    Err(e) => panic!("Error: {}", e),
+                Err(_e) => {
+                    let project = ProjectConfiguration::init(&actual_path).await?;
+                    println!(
+                        "Successfully initialized new project: {}, Godot Engine v{}",
+                        &project.name.to_string(),
+                        project.config.version.to_string()
+                    );
+
+                    Ok(())
                 },
             }
         },
         Commands::Set { version, path } => {
             let actual_path = dirs::get_actual_path(path);
-            match project::Project::load(&actual_path) {
-                Ok(mut project) => {
-                    project.config.version = EngineVersion::from_string(version);
-                    project.save().unwrap();
-                    println!(
-                        "Successfully set Godot Engine version to {}",
-                        project.config.version.to_string()
-                    );
-                }
-                Err(e) => panic!("Error: {}", e),
-            }
+            let mut project = project::Project::load(&actual_path)?;
+            project.config.version = EngineVersion::from_string(version);
+            project.save()?;
+            println!(
+                "Successfully set Godot Engine version to {}",
+                project.config.version.to_string()
+            );
+
+            Ok(())
         }
         Commands::Init { path } => {
             let actual_path = dirs::get_actual_path(path);
@@ -113,30 +110,29 @@ async fn main() {
                         &project.name.to_string(),
                         project.config.version.to_string()
                     );
+
+                    Ok(())
                 }
-                Err(_e) => match ProjectConfiguration::init(&actual_path).await {
-                    Ok(project) => {
-                        println!(
-                            "Successfully initialized new project: {}, Godot Engine v{}",
-                            &project.name.to_string(),
-                            project.config.version.to_string()
-                        );
-                    }
-                    Err(e) => panic!("Error: {}", e),
+                Err(_e) => {
+                    let project = ProjectConfiguration::init(&actual_path).await?;
+                    println!(
+                        "Successfully initialized new project: {}, Godot Engine v{}",
+                        &project.name.to_string(),
+                        project.config.version.to_string()
+                    );
+
+                    Ok(())
                 },
             }
         }
         Commands::Run { path } => {
             let actual_path = dirs::get_actual_path(path);
 
-            match project::Project::load(&actual_path) {
-                Ok(project) => {
-                    versions::ensure_version_installed(&project.config).await.unwrap();
-                    project.run().await.unwrap();
+            let project = project::Project::load(&actual_path)?;
+            versions::ensure_version_installed(&project.config).await?;
+            project.run().await?;
 
-                }
-                Err(e) => panic!("Error: {}", e),
-            }
+            Ok(())
         }
         Commands::Clean => {
             println!("Deleting all engine versions and cache...");
@@ -147,11 +143,12 @@ async fn main() {
 
             for path in &to_delete {
                 if path.is_dir() {
-                    fs::remove_dir_all(path).unwrap();
+                    fs::remove_dir_all(path)?;
                 }
             }
 
             println!("Done!");
+            Ok(())
         }
         // Commands::Engine { command } => match command {
         //     EngineCommands::Help => println!("Engine Help"),

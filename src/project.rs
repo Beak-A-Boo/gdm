@@ -1,5 +1,7 @@
 use std::{fs, path::PathBuf};
 
+use anyhow::bail;
+
 use crate::util::dirs;
 
 pub mod config;
@@ -13,13 +15,13 @@ pub struct Project {
 }
 
 impl Project {
-    pub fn load(path: &PathBuf) -> Result<Project, Box<dyn std::error::Error>> {
+    pub fn load(path: &PathBuf) -> anyhow::Result<Project> {
         let absolute_path = dunce::canonicalize(path)?;
 
         let config_path = absolute_path.join("project.json");
 
         if !config_path.exists() {
-            return Err("Project does not exist".into()); // TODO error handling
+            bail!("Project does not exist")// TODO error handling
         }
 
         let project_name = absolute_path
@@ -38,7 +40,7 @@ impl Project {
         })
     }
 
-    pub fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn save(&self) -> anyhow::Result<()> {
         let config_path = self.path.join("project.json");
 
         let config = serde_json::to_string_pretty(&self.config)?;
@@ -48,7 +50,7 @@ impl Project {
         Ok(())
     }
 
-    pub async fn run(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn run(&self) -> anyhow::Result<()> {
         let project_file = self.path.join("project.godot");
         if !project_file.exists() {
             println!("No project.godot file found, creating one...");

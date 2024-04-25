@@ -3,7 +3,7 @@ use std::{fs, path::PathBuf};
 use crate::util::{archive, dirs, download};
 
 use super::{config::ProjectConfiguration, engine::EngineVersion};
-use serde::{Deserialize, Serialize};
+use serde_derive::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 struct GithubReleaseResponse {
