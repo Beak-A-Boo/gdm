@@ -39,10 +39,6 @@ jobs:
             target: i686-pc-windows-msvc
             target_name: x86
             cargo_cmd: cargo
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            target_name: universal
-            cargo_cmd: cargo
     steps:
       - uses: actions/checkout@v4
       - name: Set up Rust toolchain
@@ -72,3 +68,34 @@ jobs:
           path: |
             target/${{ matrix.target }}/debug/gdm*
             !target/${{ matrix.target }}/debug/gdm*.d
+
+  build_macOS:
+    name: Build (MacOS)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          targets: x86_64-apple-darwin, aarch64-apple-darwin
+      - name: Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "macos-latest-${{ hashFiles('**/Cargo.lock') }}"
+      - name: Test
+        run: "cargo test --locked --all-features --verbose --target x86_64-apple-darwin"
+      - name: Build (x64)
+        run: "cargo build --locked --verbose --target x86_64-apple-darwin"
+      - name: Build (arm64)
+        run: "cargo build --locked --verbose --target aarch64-apple-darwin"
+      - name: Combine
+        run: "lipo -create -output target/x86_64-apple-darwin/debug/gdm target/x86_64-apple-darwin/debug/gdm target/aarch64-apple-darwin/debug/gdm"
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gdm-macos-universal-${{ github.sha }}
+          if-no-files-found: error
+          path: |
+            target/x86_64-apple-darwin/debug/gdm*
+            !target/x86_64-apple-darwin/debug/gdm*.d
