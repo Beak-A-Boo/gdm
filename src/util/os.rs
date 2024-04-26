@@ -2,6 +2,7 @@ use std::cmp::PartialEq;
 
 use anyhow::bail;
 
+#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
 pub enum OS {
     Windows,
@@ -9,6 +10,7 @@ pub enum OS {
     MacOS,
 }
 
+#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
 pub enum Arch {
     X86, // 32-bit
