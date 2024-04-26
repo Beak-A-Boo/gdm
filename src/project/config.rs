@@ -60,15 +60,16 @@ impl ProjectConfiguration {
     pub async fn new(
         version: EngineVersion,
         download_source: EngineDownloadSource,
+        mono: bool,
     ) -> anyhow::Result<ProjectConfiguration> {
         Ok(ProjectConfiguration {
             download_source,
-            mono: true,
+            mono,
             version,
         })
     }
 
-    pub async fn init(path: &PathBuf) -> anyhow::Result<Project> {
+    pub async fn init(path: &PathBuf, mono: bool) -> anyhow::Result<Project> {
         match std::fs::metadata(path) {
             Ok(meta) if meta.is_file() => bail!("Path is a file, not a directory: {}", path.display()),
             Ok(_) => { /* directory already exists */ }
@@ -93,7 +94,7 @@ impl ProjectConfiguration {
         let source = EngineDownloadSource::GitHub;
         let version = source.get_latest_version().await?;
 
-        let config = ProjectConfiguration::new(version, source).await?; // TODO error handling
+        let config = ProjectConfiguration::new(version, source, mono).await?; // TODO error handling
 
         let project = Project {
             name: dirname,

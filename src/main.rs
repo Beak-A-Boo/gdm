@@ -34,6 +34,9 @@ enum Commands {
     #[clap(about = "Initialize a new project")]
     Init {
         path: Option<PathBuf>,
+
+        #[clap(long, help = "Use Mono version of Godot Engine")]
+        mono: bool,
     },
     #[clap(about = "Launch Godot Engine")]
     Run {
@@ -78,7 +81,7 @@ async fn main() -> anyhow::Result<()> {
 
                 }
                 Err(_e) => {
-                    let project = ProjectConfiguration::init(&actual_path).await?;
+                    let project = ProjectConfiguration::init(&actual_path, false).await?;
                     println!(
                         "Successfully initialized new project: {}, Godot Engine v{}",
                         &project.name.to_string(),
@@ -101,7 +104,7 @@ async fn main() -> anyhow::Result<()> {
 
             Ok(())
         }
-        Commands::Init { path } => {
+        Commands::Init { path, mono } => {
             let actual_path = dirs::get_actual_path(path);
 
             match project::Project::load(&actual_path) {
@@ -115,7 +118,7 @@ async fn main() -> anyhow::Result<()> {
                     Ok(())
                 }
                 Err(_e) => {
-                    let project = ProjectConfiguration::init(&actual_path).await?;
+                    let project = ProjectConfiguration::init(&actual_path, mono).await?;
                     println!(
                         "Successfully initialized new project: {}, Godot Engine v{}",
                         &project.name.to_string(),
