@@ -61,6 +61,14 @@ jobs:
         run: |
           cargo install cross
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+      - name: Install cross compile dependencies
+        if: ${{ matrix.cargo_cmd == 'cross' && contains(matrix.target, 'ubuntu') }}
+        run: |
+          sudo apt update
+          sudo apt install -y \
+          openssl \
+          libssl-dev \
+          gcc-aarch64-linux-gnu
       - name: Cache
         uses: Swatinem/rust-cache@v2
         with:
