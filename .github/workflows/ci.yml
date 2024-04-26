@@ -65,9 +65,9 @@ jobs:
         with:
           shared-key: "${{ matrix.os }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}"
       - name: Test
-        run: ${{ matrix.cargo_cmd }} test --locked --all-features --verbose
+        run: "${{ matrix.cargo_cmd }} test --locked --all-features --verbose"
       - name: Build
-        run: ${{ matrix.cargo_cmd }} build --locked --target ${{ matrix.target }} --verbose
+        run: "${{ matrix.cargo_cmd }} build --locked --verbose --target ${{ matrix.target }}"
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
