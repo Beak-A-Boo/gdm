@@ -9,9 +9,9 @@ on:
 
 jobs:
   build_matrix:
-    name: Build (${{ matrix.os }}, ${{ matrix.target }})
+    name: Build (${{ matrix.os }} ${{ matrix.target_name }})
     concurrency:
-      group: Build-${{ matrix.os }}
+      group: Build-${{ matrix.os }}-${{ matrix.target }}
       cancel-in-progress: true
     runs-on: ${{ matrix.os }}
     strategy:
@@ -66,7 +66,7 @@ jobs:
         with:
           shared-key: "${{ matrix.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}"
       - name: Test
-        run: ${{ matrix.cargo_cmd }} test --all-features --verbose
+        run: ${{ matrix.cargo_cmd }} test --locked --all-features --verbose
       - name: Build
         run: ${{ matrix.cargo_cmd }} build --locked --target ${{ matrix.target }} --verbose
       - name: Upload Artifacts
