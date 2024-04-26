@@ -50,7 +50,7 @@ impl Project {
         Ok(())
     }
 
-    pub async fn run(&self) -> anyhow::Result<()> {
+    pub async fn run(&self, console: bool) -> anyhow::Result<()> {
         let project_file = self.path.join("project.godot");
         if !project_file.exists() {
             println!("No project.godot file found, creating one...");
@@ -59,13 +59,13 @@ impl Project {
 
         let dirs = dirs::project_dirs();
         let engine_name = self.config.get_engine_name();
+        let engine_file_name = self.config.get_engine_file_name(console);
 
-        //TODO os-dependent engine path
         let engine_path = dirs
             .data_local_dir()
             .join("engines")
             .join(&engine_name)
-            .join(format!("{}.exe", &engine_name));
+            .join(&engine_file_name);
 
         let mut command = std::process::Command::new(engine_path);
         command.arg("-e");

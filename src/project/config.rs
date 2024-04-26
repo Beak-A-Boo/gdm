@@ -107,13 +107,22 @@ impl ProjectConfiguration {
     }
 
     pub fn get_engine_name(&self) -> String {
-        let mut os_string = "win64.exe";
-        let mut engine_name = self.version.to_string();
+        let os_string = "win64"; //TODO check OS
+        let mut engine_name = self.version.to_string().clone();
         if self.mono {
-            os_string = "win64";
             engine_name.push_str("_mono");
         }
 
         format!("Godot_v{}_{}", engine_name, os_string)
+    }
+
+    pub fn get_engine_file_name(&self, console: bool) -> String {
+        let mut engine_name = self.get_engine_name();
+        if console {
+            engine_name.push_str("_console");
+        }
+
+        //TODO check OS
+        format!("{}.exe", engine_name)
     }
 }

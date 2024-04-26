@@ -130,7 +130,7 @@ async fn main() -> anyhow::Result<()> {
 
             let project = project::Project::load(&actual_path)?;
             versions::ensure_version_installed(&project.config).await?;
-            project.run().await?;
+            project.run(false).await?; //TODO --console flag
 
             Ok(())
         }

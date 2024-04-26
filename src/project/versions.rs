@@ -1,9 +1,10 @@
 use std::{fs, path::PathBuf};
 
+use serde_derive::{Deserialize, Serialize};
+
 use crate::util::{archive, dirs, download};
 
 use super::{config::ProjectConfiguration, engine::EngineVersion};
-use serde_derive::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 struct GithubReleaseResponse {
@@ -33,19 +34,21 @@ pub async fn ensure_version_installed(
     config: &ProjectConfiguration,
 ) -> Result<(), download::DownloadError> {
     let engine_name = config.get_engine_name();
+    let engine_file_name = config.get_engine_file_name(false);
 
     let dirs = dirs::project_dirs();
 
     let engine_dir = dirs.data_local_dir().join("engines").join(&engine_name);
-    let engine_file = engine_dir.join(format!("{}.exe", &engine_name));
+    let engine_file = engine_dir.join(&engine_file_name);
 
     if !engine_file.exists() {
         println!("Could not find matching version of Godot engine locally, downloading...");
 
         let zip_file_name = format!("{}.zip", &engine_name);
+        let zip_file_name_remote = format!("{}.zip", &engine_file_name);
         let zip_file_path = dirs.cache_dir().join("engines").join(&zip_file_name);
 
-        download_from_github(&zip_file_path, zip_file_name, &config.to_owned().version).await?;
+        download_from_github(&zip_file_path, zip_file_name_remote, &config.to_owned().version).await?;
 
         println!("Extracting archive...");
         archive::extract(&zip_file_path, &engine_dir, Some(true))?;
