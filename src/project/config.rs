@@ -3,6 +3,7 @@ use std::{path::PathBuf, str};
 
 use anyhow::bail;
 use serde_derive::{Deserialize, Serialize};
+use crate::util::os::OS;
 
 use super::{engine::EngineVersion, Project, versions};
 
@@ -84,7 +85,7 @@ impl ProjectConfiguration {
             bail!("Project already exists");
         }
 
-        let dirname = absolute_path
+        let directory_name = absolute_path
             .file_name()
             .unwrap()
             .to_str()
@@ -97,7 +98,7 @@ impl ProjectConfiguration {
         let config = ProjectConfiguration::new(version, source, mono).await?; // TODO error handling
 
         let project = Project {
-            name: dirname,
+            name: directory_name,
             path: absolute_path.clone(),
             config,
         };
@@ -108,11 +109,9 @@ impl ProjectConfiguration {
     }
 
     pub fn get_engine_name(&self) -> String {
-        let os_string = "win64"; //TODO check OS
-        let mut engine_name = self.version.to_string().clone();
-        if self.mono {
-            engine_name.push_str("_mono");
-        }
+        let os = OS::current();
+        let os_string = os.get_os_string(self.mono).expect("Invalid OS");
+        let engine_name = self.version.to_string().clone();
 
         format!("Godot_v{}_{}", engine_name, os_string)
     }
@@ -122,8 +121,10 @@ impl ProjectConfiguration {
         if console {
             engine_name.push_str("_console");
         }
+        if OS::current().is_windows() {
+            engine_name.push_str(".exe")
+        }
 
-        //TODO check OS
-        format!("{}.exe", engine_name)
+        engine_name
     }
 }

@@ -3,6 +3,7 @@ use std::{fs, path::PathBuf};
 use serde_derive::{Deserialize, Serialize};
 
 use crate::util::{archive, dirs, download};
+use crate::util::os::OS;
 
 use super::{config::ProjectConfiguration, engine::EngineVersion};
 
@@ -45,7 +46,13 @@ pub async fn ensure_version_installed(
         println!("Could not find matching version of Godot engine locally, downloading...");
 
         let zip_file_name = format!("{}.zip", &engine_name);
-        let zip_file_name_remote = format!("{}.zip", &engine_file_name);
+
+        let zip_file_name_remote = if OS::current().is_windows() && !config.mono {
+            format!("{}.exe.zip", &engine_name)
+        }
+        else {
+            format!("{}.zip", &engine_name)
+        };
         let zip_file_path = dirs.cache_dir().join("engines").join(&zip_file_name);
 
         download_from_github(&zip_file_path, zip_file_name_remote, &config.to_owned().version).await?;
