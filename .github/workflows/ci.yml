@@ -49,13 +49,6 @@ jobs:
             cargo_cmd: cargo
     steps:
       - uses: actions/checkout@v4
-      - name: Install dependencies
-        if: ${{ contains(matrix.os, 'ubuntu') }}
-        run: |
-          sudo apt update
-          sudo apt install -y \
-          openssl \
-          libssl-dev
       - name: Set up Rust toolchain
         if: ${{ matrix.cargo_cmd != 'cross' }}
         uses: dtolnay/rust-toolchain@master
