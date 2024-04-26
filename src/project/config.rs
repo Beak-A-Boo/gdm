@@ -70,7 +70,7 @@ impl ProjectConfiguration {
 
     pub async fn init(path: &PathBuf) -> anyhow::Result<Project> {
         match std::fs::metadata(path) {
-            Ok(meta) if meta.is_file() => panic!("Path is a file, not a directory"), //TODO error handling
+            Ok(meta) if meta.is_file() => bail!("Path is a file, not a directory: {}", path.display()),
             Ok(_) => { /* directory already exists */ }
             Err(_) => std::fs::create_dir_all(path)?,
         }

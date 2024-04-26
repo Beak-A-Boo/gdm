@@ -9,6 +9,7 @@ use crate::project::config::ProjectConfiguration;
 
 mod project;
 mod util;
+mod cli;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
