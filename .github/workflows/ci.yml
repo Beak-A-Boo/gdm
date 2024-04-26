@@ -90,12 +90,15 @@ jobs:
       - name: Build (arm64)
         run: "cargo build --locked --verbose --target aarch64-apple-darwin"
       - name: Combine
-        run: "lipo -create -output target/x86_64-apple-darwin/debug/gdm target/x86_64-apple-darwin/debug/gdm target/aarch64-apple-darwin/debug/gdm"
+        run: |
+          mkdir -p target/combined
+          lipo -create -output target/combined/gdm target/x86_64-apple-darwin/debug/gdm target/aarch64-apple-darwin/debug/gdm
+          lipo -create -output target/combined/gdm-update target/x86_64-apple-darwin/debug/gdm-update target/aarch64-apple-darwin/debug/gdm-update
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: gdm-macos-universal-${{ github.sha }}
           if-no-files-found: error
           path: |
-            target/x86_64-apple-darwin/debug/gdm*
-            !target/x86_64-apple-darwin/debug/gdm*.d
+            target/combined/gdm*
+            !target/combined/gdm*.d
