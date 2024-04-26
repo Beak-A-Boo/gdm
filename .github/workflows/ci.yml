@@ -19,7 +19,6 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        rust: [stable]
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
@@ -51,11 +50,11 @@ jobs:
             cargo_cmd: cargo
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Rust toolchain (${{ matrix.rust }})
+      - name: Set up Rust toolchain
         if: ${{ matrix.cargo_cmd != 'cross' }}
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: ${{ matrix.rust }}
+          toolchain: stable
           targets: ${{ matrix.target }}
       - name: Install cross
         if: ${{ matrix.cargo_cmd == 'cross' }}
@@ -65,7 +64,7 @@ jobs:
       - name: Cache
         uses: Swatinem/rust-cache@v2
         with:
-          shared-key: "${{ matrix.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}"
+          shared-key: "${{ matrix.os }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}"
       - name: Test
         run: ${{ matrix.cargo_cmd }} test --locked --all-features --verbose
       - name: Build
