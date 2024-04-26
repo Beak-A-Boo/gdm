@@ -9,7 +9,7 @@ on:
 
 jobs:
   build_matrix:
-    name: Build (${{ matrix.os }})
+    name: Build (${{ matrix.os }}, ${{ matrix.target }})
     concurrency:
       group: Build-${{ matrix.os }}
       cancel-in-progress: true
@@ -17,27 +17,63 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         rust: [stable]
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            target_name: x64
+            cargo_cmd: cargo
+          - os: ubuntu-latest
+            target: i686-unknown-linux-gnu
+            target_name: x86
+            cargo_cmd: cargo
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            target_name: arm64
+            cargo_cmd: cross
+          - os: ubuntu-latest
+            target: aarch32-unknown-linux-gnu
+            target_name: arm32
+            cargo_cmd: cross
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            target_name: x64
+            cargo_cmd: cargo
+          - os: windows-latest
+            target: i686-pc-windows-msvc
+            target_name: x86
+            cargo_cmd: cargo
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            target_name: universal
+            cargo_cmd: cargo
     steps:
       - uses: actions/checkout@v4
       - name: Set up Rust toolchain (${{ matrix.rust }})
+        if: ${{ matrix.cargo_cmd != 'cross' }}
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
+          targets: ${{ matrix.target }}
+      - name: Install cross
+        if: ${{ matrix.cargo_cmd == 'cross' }}
+        run: |
+          cargo install cross
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       - name: Cache
         uses: Swatinem/rust-cache@v2
         with:
-          shared-key: ${{ matrix.os }}-${{ matrix.rust }}
+          shared-key: "${{ matrix.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}"
       - name: Test
-        run: cargo test --all-features --verbose
+        run: ${{ matrix.cargo_cmd }} test --all-features --verbose
       - name: Build
-        run: cargo build
+        run: ${{ matrix.cargo_cmd }} build --locked --target ${{ matrix.target }} --verbose
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: gdm-${{ matrix.os }}-${{ github.sha }}
+          name: gdm-${{ matrix.os }}-${{ matrix.target_name }}-${{ github.sha }}
           if-no-files-found: error
           path: |
-            target/debug/gdm*
-            !target/debug/gdm*.d
+            target/${{ matrix.target }}/debug/gdm*
+            !target/${{ matrix.target }}/debug/gdm*.d
