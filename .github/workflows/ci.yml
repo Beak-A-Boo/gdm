@@ -12,30 +12,49 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  init:
+    runs-on: ubuntu-latest
+    outputs:
+      REPOSITORY_NAME: ${{ steps.setup.outputs.REPOSITORY_NAME }}
+      BUILD_TIME: ${{ steps.setup.outputs.BUILD_TIME }}
+    steps:
+      - name: Setup Environment
+        id: setup
+        run: |
+          echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}" >> $GITHUB_OUTPUT
+          echo BUILD_TIME=$(date '+%y.%m%d.%H%M') >> $GITHUB_OUTPUT
+
   build_matrix:
     name: Build (${{ matrix.os }} ${{ matrix.target_name }})
+    needs:
+      - init
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
+            os_name: linux
             target: x86_64-unknown-linux-gnu
             target_name: x64
             cargo_cmd: cargo
           - os: ubuntu-latest
+            os_name: linux
             target: i686-unknown-linux-gnu
             target_name: x86
             cargo_cmd: cross
           - os: ubuntu-latest
+            os_name: linux
             target: aarch64-unknown-linux-gnu
             target_name: arm64
             cargo_cmd: cross
           - os: windows-latest
+            os_name: windows
             target: x86_64-pc-windows-msvc
             target_name: x64
             cargo_cmd: cargo
           - os: windows-latest
+            os_name: windows
             target: i686-pc-windows-msvc
             target_name: x86
             cargo_cmd: cargo
@@ -61,16 +80,24 @@ jobs:
       - name: Build
         run: "${{ matrix.cargo_cmd }} build --locked --verbose --target ${{ matrix.target }}"
       - name: Upload Artifacts
+        id: upload
         uses: actions/upload-artifact@v4
         with:
-          name: gdm-${{ matrix.os }}-${{ matrix.target_name }}-${{ github.sha }}
+          name: ${{ needs.init.outputs.REPOSITORY_NAME }}-${{ matrix.os_name }}-${{ matrix.target_name }}-${{ github.sha }}
           if-no-files-found: error
           path: |
             target/${{ matrix.target }}/debug/gdm*
             !target/${{ matrix.target }}/debug/gdm*.d
-
+      - name: Publish Artifacts
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'beak-a-boo/gdm'
+        run: |
+          curl -fsSL -H "Authorization: Bearer ${{ github.token }}" -o artifact.zip "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${{ steps.upload.outputs.artifact-id }}/zip"
+          curl -fsSL -H "X-Api-Key: ${{ secrets.ARTIFACT_SERVER_TOKEN }}" -X PUT --form "file=@artifact.zip" ${{ secrets.ARTIFACT_SERVER_UPLOAD_URL }}/${{ needs.init.outputs.REPOSITORY_NAME }}/${{ needs.init.outputs.BUILD_TIME }}/${{ needs.init.outputs.REPOSITORY_NAME }}-${{ matrix.os_name }}-${{ matrix.target_name }}-${{ needs.init.outputs.BUILD_TIME }}.zip
+          
   build_macOS:
     name: Build (MacOS)
+    needs:
+      - init
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -95,10 +122,16 @@ jobs:
           lipo -create -output target/combined/gdm target/x86_64-apple-darwin/debug/gdm target/aarch64-apple-darwin/debug/gdm
           lipo -create -output target/combined/gdm-update target/x86_64-apple-darwin/debug/gdm-update target/aarch64-apple-darwin/debug/gdm-update
       - name: Upload Artifact
+        id: upload
         uses: actions/upload-artifact@v4
         with:
-          name: gdm-macos-universal-${{ github.sha }}
+          name: ${{ needs.init.outputs.REPOSITORY_NAME }}-macos-universal-${{ github.sha }}
           if-no-files-found: error
           path: |
             target/combined/gdm*
             !target/combined/gdm*.d
+      - name: Publish Artifacts
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'beak-a-boo/gdm'
+        run: |
+          curl -fsSL -H "Authorization: Bearer ${{ github.token }}" -o artifact.zip "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${{ steps.upload.outputs.artifact-id }}/zip"
+          curl -fsSL -H "X-Api-Key: ${{ secrets.ARTIFACT_SERVER_TOKEN }}" -X PUT --form "file=@artifact.zip" ${{ secrets.ARTIFACT_SERVER_UPLOAD_URL }}/${{ needs.init.outputs.REPOSITORY_NAME }}/${{ needs.init.outputs.BUILD_TIME }}/${{ needs.init.outputs.REPOSITORY_NAME }}-macos-universal-${{ needs.init.outputs.BUILD_TIME }}.zip
