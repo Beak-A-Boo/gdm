@@ -33,7 +33,7 @@ pub async fn download_from_github(
 
 pub async fn ensure_version_installed(
     config: &ProjectConfiguration,
-) -> Result<(), download::DownloadError> {
+) -> anyhow::Result<()> {
     let engine_name = config.get_engine_name();
     let engine_file_name = config.get_engine_file_name(false);
 
@@ -59,6 +59,13 @@ pub async fn ensure_version_installed(
 
         println!("Extracting archive...");
         archive::extract(&zip_file_path, &engine_dir, Some(true))?;
+        for entry in [config.get_engine_file_name(false), config.get_engine_file_name(true)] {
+            let entry_path = engine_dir.join(&entry);
+            if entry_path.exists() {
+                //todo set executable bit
+                OS::current().set_executable(&entry_path)?;
+            }
+        }
 
         println!("Reclaiming disk space...");
         let tmp_dir = dirs::project_dirs().cache_dir().join(".temp");

@@ -1,4 +1,5 @@
 use std::cmp::PartialEq;
+use std::path::PathBuf;
 
 use anyhow::bail;
 
@@ -8,6 +9,33 @@ pub enum OS {
     Windows,
     Linux,
     MacOS,
+}
+
+impl OS {
+
+    #[cfg(target_os = "windows")]
+    pub(crate) fn set_executable(&self, _: &PathBuf) -> anyhow::Result<()> {
+        // NO-OP
+        Ok(())
+    }
+
+    #[cfg(target_os = "linux")]
+    pub(crate) fn set_executable(&self, file: &PathBuf) -> anyhow::Result<()> {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = file.metadata()?.permissions();
+        perms.set_mode(0o755);
+        fs::set_permissions(file, perms)?;
+        Ok(())
+    }
+
+    #[cfg(target_os = "macos")]
+    pub(crate) fn set_executable(&self, file: &PathBuf) -> anyhow::Result<()> {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = file.metadata()?.permissions();
+        perms.set_mode(0o755);
+        fs::set_permissions(file, perms)?;
+        Ok(())
+    }
 }
 
 #[allow(dead_code)]

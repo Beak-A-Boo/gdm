@@ -41,6 +41,9 @@ enum Commands {
     #[clap(about = "Launch Godot Engine")]
     Run {
         path: Option<PathBuf>,
+
+        #[clap(long, help = "Run the engine in console mode")]
+        console: bool,
     },
     #[clap(about = "Uninstall all engine versions and clear download cache")]
     Clean,
@@ -129,12 +132,12 @@ async fn main() -> anyhow::Result<()> {
                 },
             }
         }
-        Commands::Run { path } => {
+        Commands::Run { path, console } => {
             let actual_path = dirs::get_actual_path(path);
 
             let project = project::Project::load(&actual_path)?;
             versions::ensure_version_installed(&project.config).await?;
-            project.run(false).await?; //TODO --console flag
+            project.run(console).await?;
 
             Ok(())
         }
