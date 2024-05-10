@@ -24,7 +24,7 @@ impl OS {
         use std::os::unix::fs::PermissionsExt;
         let mut perms = file.metadata()?.permissions();
         perms.set_mode(0o755);
-        fs::set_permissions(file, perms)?;
+        std::fs::set_permissions(file, perms)?;
         Ok(())
     }
 
@@ -33,7 +33,7 @@ impl OS {
         use std::os::unix::fs::PermissionsExt;
         let mut perms = file.metadata()?.permissions();
         perms.set_mode(0o755);
-        fs::set_permissions(file, perms)?;
+        std::fs::set_permissions(file, perms)?;
         Ok(())
     }
 }
