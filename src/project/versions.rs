@@ -2,10 +2,10 @@ use std::{fs, path::PathBuf};
 
 use serde_derive::{Deserialize, Serialize};
 
-use crate::util::{archive, dirs, download};
 use crate::util::os::OS;
+use crate::util::{archive, download};
 
-use super::{config::ProjectConfiguration, engine::EngineVersion};
+use super::{engine::EngineVersion, Project};
 
 #[derive(Serialize, Deserialize, Debug)]
 struct GithubReleaseResponse {
@@ -22,24 +22,25 @@ pub async fn get_latest_version_from_github() -> Result<EngineVersion, download:
 pub async fn download_from_github(
     path: &PathBuf,
     filename: String,
-    version: &EngineVersion,
+    project: &Project,
 ) -> Result<u64, download::DownloadError> {
     let url = format!(
         "https://github.com/godotengine/godot/releases/download/{}/{}",
-        version, filename
+        &project.config.version, filename
     );
-    download::download_file(url, path).await
+    download::download_file(url, path, &project.dirs).await
 }
 
 pub async fn ensure_version_installed(
-    config: &ProjectConfiguration,
+    project: &Project,
 ) -> anyhow::Result<()> {
+    let config = &project.config;
     let engine_name = config.get_engine_name();
     let engine_file_name = config.get_engine_file_name(false);
 
-    let dirs = dirs::project_dirs();
+    let dirs = &project.dirs;
 
-    let engine_dir = dirs.data_local_dir().join("engines").join(&engine_name);
+    let engine_dir = dirs.engines_install_dir.join(&engine_name);
     let engine_file = engine_dir.join(&engine_file_name);
 
     if !engine_file.exists() {
@@ -53,9 +54,9 @@ pub async fn ensure_version_installed(
         else {
             format!("{}.zip", &engine_name)
         };
-        let zip_file_path = dirs.cache_dir().join("engines").join(&zip_file_name);
+        let zip_file_path = dirs.cache_dir.join("engines").join(&zip_file_name);
 
-        download_from_github(&zip_file_path, zip_file_name_remote, &config.to_owned().version).await?;
+        download_from_github(&zip_file_path, zip_file_name_remote, &project).await?;
 
         println!("Extracting archive...");
         archive::extract(&zip_file_path, &engine_dir, Some(true))?;
@@ -68,9 +69,8 @@ pub async fn ensure_version_installed(
         }
 
         println!("Reclaiming disk space...");
-        let tmp_dir = dirs::project_dirs().cache_dir().join(".temp");
-        if tmp_dir.is_dir() {
-            fs::remove_dir_all(tmp_dir)?;
+        if dirs.download_dir.is_dir() {
+            fs::remove_dir_all(&dirs.download_dir)?;
         }
 
         println!(

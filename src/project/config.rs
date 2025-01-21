@@ -1,8 +1,9 @@
 use core::fmt;
-use std::{path::PathBuf, str};
+use std::str;
 
 use anyhow::bail;
 use serde_derive::{Deserialize, Serialize};
+use crate::util::dirs::Dirs;
 use crate::util::os::OS;
 
 use super::{engine::EngineVersion, Project, versions};
@@ -70,22 +71,20 @@ impl ProjectConfiguration {
         })
     }
 
-    pub async fn init(path: &PathBuf, mono: bool) -> anyhow::Result<Project> {
-        match std::fs::metadata(path) {
-            Ok(meta) if meta.is_file() => bail!("Path is a file, not a directory: {}", path.display()),
+    pub async fn init(dirs: &Dirs, mono: bool) -> anyhow::Result<Project> {
+        match std::fs::metadata(&dirs.absolute_project_dir) {
+            Ok(meta) if meta.is_file() => bail!("Path is a file, not a directory: {}", dirs.absolute_project_dir.display()),
             Ok(_) => { /* directory already exists */ }
-            Err(_) => std::fs::create_dir_all(path)?,
+            Err(_) => std::fs::create_dir_all(&dirs.project_dir)?,
         }
 
-        let absolute_path = dunce::canonicalize(path)?;
-
-        let config_path = absolute_path.join("project.json");
+        let config_path = dirs.absolute_project_dir.join("project.json");
 
         if config_path.exists() {
             bail!("Project already exists");
         }
 
-        let directory_name = absolute_path
+        let directory_name = dirs.absolute_project_dir
             .file_name()
             .unwrap()
             .to_str()
@@ -99,8 +98,8 @@ impl ProjectConfiguration {
 
         let project = Project {
             name: directory_name,
-            path: absolute_path.clone(),
             config,
+            dirs: dirs.clone(),
         };
 
         project.save()?;

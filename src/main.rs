@@ -59,11 +59,13 @@ enum EngineCommands {}
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
+    dotenvy::dotenv().ok();
 
     match cli.command {
         Commands::Upgrade { path } => {
-            let actual_path = dirs::get_actual_path(path);
-            match project::Project::load(&actual_path) {
+            let dirs = dirs::init(path).await?;
+
+            match project::Project::load(&dirs) {
                 Ok(mut project) => {
                     println!(
                         "Found existing project: {}, Godot Engine v{}!",
@@ -84,7 +86,7 @@ async fn main() -> anyhow::Result<()> {
 
                 }
                 Err(_e) => {
-                    let project = ProjectConfiguration::init(&actual_path, false).await?;
+                    let project = ProjectConfiguration::init(&dirs, false).await?;
                     println!(
                         "Successfully initialized new project: {}, Godot Engine v{}",
                         &project.name.to_string(),
@@ -96,8 +98,8 @@ async fn main() -> anyhow::Result<()> {
             }
         },
         Commands::Set { version, path } => {
-            let actual_path = dirs::get_actual_path(path);
-            let mut project = project::Project::load(&actual_path)?;
+            let dirs = dirs::init(path).await?;
+            let mut project = project::Project::load(&dirs)?;
             project.config.version = EngineVersion::from_string(version);
             project.save()?;
             println!(
@@ -108,9 +110,9 @@ async fn main() -> anyhow::Result<()> {
             Ok(())
         }
         Commands::Init { path, mono } => {
-            let actual_path = dirs::get_actual_path(path);
+            let dirs = dirs::init(path).await?;
 
-            match project::Project::load(&actual_path) {
+            match project::Project::load(&dirs) {
                 Ok(project) => {
                     println!(
                         "Found existing project: {}, Godot Engine v{}, aborting!",
@@ -121,7 +123,7 @@ async fn main() -> anyhow::Result<()> {
                     Ok(())
                 }
                 Err(_e) => {
-                    let project = ProjectConfiguration::init(&actual_path, mono).await?;
+                    let project = ProjectConfiguration::init(&dirs, mono).await?;
                     println!(
                         "Successfully initialized new project: {}, Godot Engine v{}",
                         &project.name.to_string(),
@@ -133,20 +135,20 @@ async fn main() -> anyhow::Result<()> {
             }
         }
         Commands::Run { path, console } => {
-            let actual_path = dirs::get_actual_path(path);
+            let dirs = dirs::init(path).await?;
 
-            let project = project::Project::load(&actual_path)?;
-            versions::ensure_version_installed(&project.config).await?;
+            let project = project::Project::load(&dirs)?;
+            versions::ensure_version_installed(&project).await?;
             project.run(console).await?;
 
             Ok(())
         }
         Commands::Clean => {
             println!("Deleting all engine versions and cache...");
-            let project_dirs = dirs::project_dirs();
+            let dirs = dirs::init_no_project().await?;
             let mut to_delete: Vec<PathBuf> = Vec::new();
-            to_delete.push(project_dirs.cache_dir().to_path_buf());
-            to_delete.push(project_dirs.data_local_dir().join("engines"));
+            to_delete.push(dirs.cache_dir);
+            to_delete.push(dirs.engines_install_dir);
 
             for path in &to_delete {
                 if path.is_dir() {

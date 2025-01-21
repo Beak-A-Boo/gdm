@@ -1,12 +1,12 @@
 use std::{cmp, fs, io::Write, path::PathBuf};
 
+use super::archive;
+use crate::util::dirs::Dirs;
 use futures_util::StreamExt;
 use indicatif::{ProgressBar, ProgressStyle};
 use rand::Rng;
 use reqwest::Client;
 use thiserror::Error;
-
-use super::{archive, dirs};
 
 static APP_USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
 
@@ -29,8 +29,8 @@ pub fn make_client() -> Result<Client, DownloadError> {
     Ok(client)
 }
 
-pub async fn download_file(url: String, local_path: &PathBuf) -> Result<u64, DownloadError> {
-    let download_dir = dirs::project_dirs().cache_dir().join(".temp");
+pub async fn download_file(url: String, local_path: &PathBuf, dirs: &Dirs) -> Result<u64, DownloadError> {
+    let download_dir = &dirs.download_dir;
     fs::create_dir_all(&download_dir)?;
 
     if local_path.exists() {
@@ -69,7 +69,8 @@ pub async fn download_file(url: String, local_path: &PathBuf) -> Result<u64, Dow
             .parent()
             .map(|p| fs::create_dir_all(p))
             .expect("Unable to create target directory")?;
-        fs::rename(&tmp_file, local_path)?;
+
+        fs::copy(&tmp_file, local_path)?;
         Ok(downloaded)
     } else {
         Err(DownloadError::Unknown) //TODO status code error?
