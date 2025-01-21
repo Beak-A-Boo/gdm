@@ -21,7 +21,7 @@ impl Project {
         let config_path = project_absolute_path.join("project.json");
 
         if !config_path.exists() {
-            bail!("Project does not exist")// TODO error handling
+            bail!("Project does not exist") // TODO error handling
         }
 
         let project_name = project_absolute_path
@@ -64,13 +64,15 @@ impl Project {
         let engine_name = self.config.get_engine_name();
         let engine_file_name = self.config.get_engine_file_name(console);
 
-        let engine_path = &self.dirs.engines_install_dir
+        let engine_path = &self
+            .dirs
+            .engines_install_dir
             .join(&engine_name)
             .join(&engine_file_name);
 
         let mut command = std::process::Command::new(engine_path);
         command.arg("-e");
-        command.current_dir(&self.path());
+        command.current_dir(self.path());
         command.spawn()?;
 
         Ok(())

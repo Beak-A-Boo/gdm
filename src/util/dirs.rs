@@ -1,7 +1,7 @@
-use std::env;
 use anyhow::anyhow;
 use directories::ProjectDirs;
 use path_clean::PathClean;
+use std::env;
 use std::path::PathBuf;
 use tokio::fs;
 
@@ -19,7 +19,6 @@ pub async fn init(project_path: Option<PathBuf>) -> anyhow::Result<Dirs> {
 }
 
 async fn init0(project_path: Option<PathBuf>, init_project: bool) -> anyhow::Result<Dirs> {
-
     let engines_install_dir: PathBuf;
     let download_dir: PathBuf;
     let cache_dir: PathBuf;
@@ -27,7 +26,8 @@ async fn init0(project_path: Option<PathBuf>, init_project: bool) -> anyhow::Res
     match env::var("GDM_USER_HOME").ok().map(PathBuf::from) {
         None => {
             // empty strings for qualifier and org name are fine
-            let project_dirs = ProjectDirs::from("", "", "gdm").ok_or(anyhow!("Could not read global directories"))?;
+            let project_dirs = ProjectDirs::from("", "", "gdm")
+                .ok_or(anyhow!("Could not read global directories"))?;
             cache_dir = project_dirs.cache_dir().to_path_buf();
             let data_local_dir = project_dirs.data_local_dir().to_path_buf();
 

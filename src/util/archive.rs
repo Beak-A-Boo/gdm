@@ -1,5 +1,5 @@
+use std::path::Path;
 use std::{fs, io, path::PathBuf};
-
 use thiserror::Error;
 use zip::result::ZipError;
 
@@ -12,11 +12,11 @@ pub enum ExtractError {
 }
 
 pub fn extract(
-    archive: &PathBuf,
-    target_directory: &PathBuf,
+    archive: &Path,
+    target_directory: &Path,
     skip_empty_top_level_directory: Option<bool>,
 ) -> Result<(), ExtractError> {
-    let file = fs::File::open(&archive)?;
+    let file = fs::File::open(archive)?;
     let mut archive = zip::ZipArchive::new(file)?;
 
     let strip_top_level =
@@ -43,9 +43,7 @@ pub fn extract(
             fs::create_dir_all(&outpath)?;
         } else {
             if let Some(p) = outpath.parent() {
-                if !p.exists() {
-                    fs::create_dir_all(&p)?;
-                }
+                fs::create_dir_all(p)?;
             }
             let mut outfile = fs::File::create(&outpath)?;
             io::copy(&mut file, &mut outfile)?;

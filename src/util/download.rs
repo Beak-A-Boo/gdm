@@ -29,12 +29,16 @@ pub fn make_client() -> Result<Client, DownloadError> {
     Ok(client)
 }
 
-pub async fn download_file(url: String, local_path: &PathBuf, dirs: &Dirs) -> Result<u64, DownloadError> {
+pub async fn download_file(
+    url: String,
+    local_path: &PathBuf,
+    dirs: &Dirs,
+) -> Result<u64, DownloadError> {
     let download_dir = &dirs.download_dir;
-    fs::create_dir_all(&download_dir)?;
+    fs::create_dir_all(download_dir)?;
 
     if local_path.exists() {
-        fs::remove_file(&local_path)?;
+        fs::remove_file(local_path)?;
     }
 
     let mut rng = rand::thread_rng();
@@ -67,7 +71,7 @@ pub async fn download_file(url: String, local_path: &PathBuf, dirs: &Dirs) -> Re
         pb.finish_with_message(format!("Downloaded {} bytes", downloaded));
         local_path
             .parent()
-            .map(|p| fs::create_dir_all(p))
+            .map(fs::create_dir_all)
             .expect("Unable to create target directory")?;
 
         fs::copy(&tmp_file, local_path)?;

@@ -8,11 +8,11 @@ use anyhow::bail;
 pub enum OS {
     Windows,
     Linux,
+    #[allow(clippy::enum_variant_names)]
     MacOS,
 }
 
 impl OS {
-
     #[cfg(target_os = "windows")]
     pub(crate) fn set_executable(&self, _: &PathBuf) -> anyhow::Result<()> {
         // NO-OP
@@ -41,12 +41,11 @@ impl OS {
 #[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
 pub enum Arch {
-    X86, // 32-bit
-    X64, // 64-bit
+    X86,   // 32-bit
+    X64,   // 64-bit
     ARM32, // ARM 32-bit
     ARM64, // ARM 64-bit
 }
-
 
 #[cfg(target_os = "windows")]
 const CURRENT_OS: OS = OS::Windows;
@@ -65,7 +64,6 @@ const CURRENT_ARCH: Arch = Arch::ARM32;
 const CURRENT_ARCH: Arch = Arch::ARM64;
 
 impl Default for OS {
-
     fn default() -> Self {
         OS::current()
     }

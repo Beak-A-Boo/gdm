@@ -3,9 +3,8 @@ use std::str::FromStr;
 
 use serde::Serializer;
 
-#[derive(Debug, serde_with::DeserializeFromStr)]
+#[derive(Debug, serde_with::DeserializeFromStr, Eq)]
 pub struct EngineVersion {
-    
     pub version_string: String,
     pub build_string: Option<String>,
 }
@@ -18,17 +17,23 @@ impl FromStr for EngineVersion {
     }
 }
 
+impl PartialEq<Self> for EngineVersion {
+    fn eq(&self, other: &Self) -> bool {
+        self.to_string() == other.to_string()
+    }
+}
+
 impl fmt::Display for EngineVersion {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self.build_string {
             Some(build_string) => {
                 write!(
                     f,
-                    "{}-{}",
-                    self.version_string, build_string
+                    "{version_string}-{build_string}",
+                    version_string = self.version_string
                 )
             }
-            None => write!(f, "{}", self.version_string),
+            None => write!(f, "{version_string}", version_string = self.version_string),
         }
     }
 }

@@ -1,12 +1,12 @@
 use core::fmt;
 use std::str;
 
-use anyhow::bail;
-use serde_derive::{Deserialize, Serialize};
 use crate::util::dirs::Dirs;
 use crate::util::os::OS;
+use anyhow::bail;
+use serde_derive::{Deserialize, Serialize};
 
-use super::{engine::EngineVersion, Project, versions};
+use super::{engine::EngineVersion, versions, Project};
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct ProjectConfiguration {
@@ -73,7 +73,10 @@ impl ProjectConfiguration {
 
     pub async fn init(dirs: &Dirs, mono: bool) -> anyhow::Result<Project> {
         match std::fs::metadata(&dirs.absolute_project_dir) {
-            Ok(meta) if meta.is_file() => bail!("Path is a file, not a directory: {}", dirs.absolute_project_dir.display()),
+            Ok(meta) if meta.is_file() => bail!(
+                "Path is a file, not a directory: {}",
+                dirs.absolute_project_dir.display()
+            ),
             Ok(_) => { /* directory already exists */ }
             Err(_) => std::fs::create_dir_all(&dirs.project_dir)?,
         }
@@ -84,7 +87,8 @@ impl ProjectConfiguration {
             bail!("Project already exists");
         }
 
-        let directory_name = dirs.absolute_project_dir
+        let directory_name = dirs
+            .absolute_project_dir
             .file_name()
             .unwrap()
             .to_str()

@@ -31,9 +31,7 @@ pub async fn download_from_github(
     download::download_file(url, path, &project.dirs).await
 }
 
-pub async fn ensure_version_installed(
-    project: &Project,
-) -> anyhow::Result<()> {
+pub async fn ensure_version_installed(project: &Project) -> anyhow::Result<()> {
     let config = &project.config;
     let engine_name = config.get_engine_name();
     let engine_file_name = config.get_engine_file_name(false);
@@ -50,17 +48,19 @@ pub async fn ensure_version_installed(
 
         let zip_file_name_remote = if OS::current().is_windows() && !config.mono {
             format!("{}.exe.zip", &engine_name)
-        }
-        else {
+        } else {
             format!("{}.zip", &engine_name)
         };
         let zip_file_path = dirs.cache_dir.join("engines").join(&zip_file_name);
 
-        download_from_github(&zip_file_path, zip_file_name_remote, &project).await?;
+        download_from_github(&zip_file_path, zip_file_name_remote, project).await?;
 
         println!("Extracting archive...");
         archive::extract(&zip_file_path, &engine_dir, Some(true))?;
-        for entry in [config.get_engine_file_name(false), config.get_engine_file_name(true)] {
+        for entry in [
+            config.get_engine_file_name(false),
+            config.get_engine_file_name(true),
+        ] {
             let entry_path = engine_dir.join(&entry);
             if entry_path.exists() {
                 //todo set executable bit
