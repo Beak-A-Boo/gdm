@@ -5,12 +5,8 @@ edition = "2021"
 default-run = "gdm"
 
 [[bin]]
-name = "gdm"
-path = "src/main.rs"
-
-[[bin]]
 name = "gdm-update"
-path = "src/updater/main.rs"
+path = "src/bin/update.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

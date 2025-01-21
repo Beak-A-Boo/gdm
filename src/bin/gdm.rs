@@ -1,15 +1,11 @@
-use std::{fs, path::PathBuf};
-
 use clap::{Parser, Subcommand};
-
-use project::{engine::EngineVersion, versions};
-use util::dirs;
-
-use crate::project::config::ProjectConfiguration;
-
-mod cli;
-mod project;
-mod util;
+use gdm::project;
+use gdm::project::config::ProjectConfiguration;
+use gdm::project::engine::EngineVersion;
+use gdm::project::versions;
+use gdm::util::dirs;
+use std::fs;
+use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
