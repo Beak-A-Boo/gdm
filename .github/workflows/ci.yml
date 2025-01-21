@@ -29,6 +29,10 @@ jobs:
     needs:
       - init
     runs-on: ${{ matrix.os }}
+    env:
+        BUILD_TIME: ${{ needs.init.outputs.BUILD_TIME }}
+        GDM_VERSION: ${{ needs.init.outputs.BUILD_TIME }}
+        REPOSITORY_NAME: ${{ needs.init.outputs.REPOSITORY_NAME }}
     strategy:
       fail-fast: false
       matrix:
@@ -92,7 +96,7 @@ jobs:
         if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && github.repository == 'beak-a-boo/gdm'
         run: |
           curl -fsSL -H "Authorization: Bearer ${{ github.token }}" -o artifact.zip "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${{ steps.upload.outputs.artifact-id }}/zip"
-          curl -fsSL -H "X-Api-Key: ${{ secrets.ARTIFACT_SERVER_TOKEN }}" -X PUT --form "file=@artifact.zip" ${{ secrets.ARTIFACT_SERVER_UPLOAD_URL }}/${{ needs.init.outputs.REPOSITORY_NAME }}/${{ needs.init.outputs.BUILD_TIME }}/${{ needs.init.outputs.REPOSITORY_NAME }}-${{ matrix.os_name }}-${{ matrix.target_name }}-${{ needs.init.outputs.BUILD_TIME }}.zip
+          curl -fsSL -H "X-Api-Key: ${{ secrets.ARTIFACT_SERVER_TOKEN }}" -X PUT --form "file=@artifact.zip" ${{ secrets.ARTIFACT_SERVER_UPLOAD_URL }}/${{ env.REPOSITORY_NAME }}/${{ env.BUILD_TIME }}/${{ env.REPOSITORY_NAME }}-${{ matrix.os_name }}-${{ matrix.target_name }}-${{ env.BUILD_TIME }}.zip
           
   build_macOS:
     name: Build (MacOS)

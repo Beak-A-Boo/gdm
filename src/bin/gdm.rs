@@ -1,14 +1,23 @@
 use clap::{Parser, Subcommand};
-use gdm::project;
+use const_format::concatcp;
 use gdm::project::config::ProjectConfiguration;
 use gdm::project::engine::EngineVersion;
 use gdm::project::versions;
 use gdm::util::dirs;
+use gdm::{built_info, project};
 use std::fs;
 use std::path::PathBuf;
 
+const ABOUT: &str = concatcp!(
+    built_info::PKG_DESCRIPTION,
+    "\n - ",
+    built_info::PKG_HOMEPAGE,
+    "\ngit: ",
+    built_info::GIT_VERSION.unwrap()
+);
+
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
+#[command(author = gdm::built_info::PKG_AUTHORS, version = gdm::VERSION, about = ABOUT)]
 #[command(next_line_help = true)]
 struct Cli {
     #[command(subcommand)]
