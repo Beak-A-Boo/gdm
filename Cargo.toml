@@ -33,7 +33,7 @@ anyhow = "1.0.95"
 const_format = "0.2.34"
 
 [build-dependencies]
-built = { version = "0.7.5", features = ["git2"] }
+built = { version = "0.8.0", features = ["git2"] }
 
 [target.aarch64-unknown-linux-gnu]
 pre-build = [
