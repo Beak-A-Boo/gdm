@@ -34,3 +34,9 @@ const_format = "0.2.34"
 
 [build-dependencies]
 built = { version = "0.7.5", features = ["git2"] }
+
+[target.aarch64-unknown-linux-gnu]
+pre-build = [
+    "dpkg --add-architecture $CROSS_DEB_ARCH",
+    "apt update && apt -y install libz-dev:$CROSS_DEB_ARCH"
+]
