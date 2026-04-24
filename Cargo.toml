@@ -1,6 +1,6 @@
 [package]
 name = "gdm"
-edition = "2021"
+edition = "2024"
 build = "build.rs"
 description = "Godot Project Manager"
 homepage = "https://beak-a-boo.com"
@@ -20,7 +20,7 @@ dunce = "1.0.5"
 futures-util = "0.3.31"
 indicatif = "0.17.9"
 path-clean = "1.0.1"
-rand = "0.8.5"
+rand = "0.10.1"
 reqwest = { version = "0.12.12", features = ["json", "stream"] }
 serde = "1.0.217"
 serde_derive = "1.0.217"

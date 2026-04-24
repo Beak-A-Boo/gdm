@@ -4,6 +4,7 @@ use super::archive;
 use crate::util::dirs::Dirs;
 use futures_util::StreamExt;
 use indicatif::{ProgressBar, ProgressStyle};
+use rand::prelude::ThreadRng;
 use rand::Rng;
 use reqwest::Client;
 use thiserror::Error;
@@ -41,10 +42,10 @@ pub async fn download_file(
         fs::remove_file(local_path)?;
     }
 
-    let mut rng = rand::thread_rng();
-    let rand_int: u32 = rng.gen();
+    let mut rng = ThreadRng::default();
+    let rand_int = rng.next_u32();
 
-    let tmp_file = download_dir.join(format!("download-{}", rand_int));
+    let tmp_file = download_dir.join(format!("download-{rand_int}"));
 
     let client = make_client()?;
     let result = client.get(&url).send().await?;
