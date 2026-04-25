@@ -61,7 +61,7 @@ enum EngineCommands {}
 
 #[dotenvy::load(required = false)]
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> rootcause::Result<()> {
     let cli = Cli::parse();
 
     match cli.command {

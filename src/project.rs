@@ -1,7 +1,5 @@
 use std::{fs, path::PathBuf};
-
-use anyhow::bail;
-
+use rootcause::bail;
 use crate::util::dirs::Dirs;
 
 pub mod config;
@@ -15,7 +13,7 @@ pub struct Project {
 }
 
 impl Project {
-    pub fn load(dirs: &Dirs) -> anyhow::Result<Project> {
+    pub fn load(dirs: &Dirs) -> rootcause::Result<Project> {
         let project_absolute_path = dunce::canonicalize(&dirs.project_dir)?;
 
         let config_path = project_absolute_path.join("project.json");
@@ -40,7 +38,7 @@ impl Project {
         })
     }
 
-    pub fn save(&self) -> anyhow::Result<()> {
+    pub fn save(&self) -> rootcause::Result<()> {
         let config_path = self.path().join("project.json");
 
         let config = serde_json::to_string_pretty(&self.config)?;
@@ -54,7 +52,7 @@ impl Project {
         self.dirs.absolute_project_dir.clone()
     }
 
-    pub async fn run(&self, console: bool) -> anyhow::Result<()> {
+    pub async fn run(&self, console: bool) -> rootcause::Result<()> {
         let project_file = self.path().join("project.godot");
         if !project_file.exists() {
             println!("No project.godot file found, creating one...");

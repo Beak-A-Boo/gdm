@@ -29,7 +29,7 @@ pub async fn download_from_github(
     download::download_file(url, path, &project.dirs).await
 }
 
-pub async fn ensure_version_installed(project: &Project) -> anyhow::Result<()> {
+pub async fn ensure_version_installed(project: &Project) -> rootcause::Result<()> {
     let config = &project.config;
     let engine_name = config.get_engine_name();
     let engine_file_name = config.get_engine_file_name(false);

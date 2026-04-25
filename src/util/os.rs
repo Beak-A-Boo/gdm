@@ -1,7 +1,6 @@
 use std::cmp::PartialEq;
 use std::path::PathBuf;
-
-use anyhow::bail;
+use rootcause::bail;
 
 #[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
@@ -14,13 +13,13 @@ pub enum OS {
 
 impl OS {
     #[cfg(target_os = "windows")]
-    pub(crate) fn set_executable(&self, _: &PathBuf) -> anyhow::Result<()> {
+    pub(crate) fn set_executable(&self, _: &PathBuf) -> rootcause::Result<()> {
         // NO-OP
         Ok(())
     }
 
     #[cfg(target_os = "linux")]
-    pub(crate) fn set_executable(&self, file: &PathBuf) -> anyhow::Result<()> {
+    pub(crate) fn set_executable(&self, file: &PathBuf) -> rootcause::Result<()> {
         use std::os::unix::fs::PermissionsExt;
         let mut perms = file.metadata()?.permissions();
         perms.set_mode(0o755);
@@ -29,7 +28,7 @@ impl OS {
     }
 
     #[cfg(target_os = "macos")]
-    pub(crate) fn set_executable(&self, file: &PathBuf) -> anyhow::Result<()> {
+    pub(crate) fn set_executable(&self, file: &PathBuf) -> rootcause::Result<()> {
         use std::os::unix::fs::PermissionsExt;
         let mut perms = file.metadata()?.permissions();
         perms.set_mode(0o755);
@@ -82,7 +81,7 @@ impl OS {
         CURRENT_ARCH.clone()
     }
 
-    pub fn get_os_string(&self, mono: bool) -> anyhow::Result<&str> {
+    pub fn get_os_string(&self, mono: bool) -> rootcause::Result<&str> {
         match (self, self.architecture(), mono) {
             (OS::Windows, Arch::X86, false) => Ok("win32"),
             (OS::Windows, Arch::X86, true) => Ok("mono_win32"),

@@ -1,9 +1,8 @@
 use core::fmt;
 use std::str;
-
+use rootcause::bail;
 use crate::util::dirs::Dirs;
 use crate::util::os::OS;
-use anyhow::bail;
 use serde::{Deserialize, Serialize};
 use super::{engine::EngineVersion, versions, Project};
 
@@ -50,7 +49,7 @@ impl serde::ser::Serialize for EngineDownloadSource {
 }
 
 impl EngineDownloadSource {
-    pub async fn get_latest_version(&self) -> anyhow::Result<EngineVersion> {
+    pub async fn get_latest_version(&self) -> rootcause::Result<EngineVersion> {
         match self {
             EngineDownloadSource::GitHub => Ok(versions::get_latest_version_from_github().await?),
         }
@@ -62,7 +61,7 @@ impl ProjectConfiguration {
         version: EngineVersion,
         download_source: EngineDownloadSource,
         mono: bool,
-    ) -> anyhow::Result<ProjectConfiguration> {
+    ) -> rootcause::Result<ProjectConfiguration> {
         Ok(ProjectConfiguration {
             download_source,
             mono,
@@ -70,7 +69,7 @@ impl ProjectConfiguration {
         })
     }
 
-    pub async fn init(dirs: &Dirs, mono: bool) -> anyhow::Result<Project> {
+    pub async fn init(dirs: &Dirs, mono: bool) -> rootcause::Result<Project> {
         match std::fs::metadata(&dirs.absolute_project_dir) {
             Ok(meta) if meta.is_file() => bail!(
                 "Path is a file, not a directory: {}",

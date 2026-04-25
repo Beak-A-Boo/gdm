@@ -1,8 +1,8 @@
-use anyhow::anyhow;
 use directories::ProjectDirs;
 use path_clean::PathClean;
 use std::env;
 use std::path::PathBuf;
+use rootcause::report;
 use tokio::fs;
 
 #[derive(Debug, Clone)]
@@ -14,11 +14,11 @@ pub struct Dirs {
     pub engines_install_dir: PathBuf,
 }
 
-pub async fn init(project_path: Option<PathBuf>) -> anyhow::Result<Dirs> {
+pub async fn init(project_path: Option<PathBuf>) -> rootcause::Result<Dirs> {
     init0(project_path, true).await
 }
 
-async fn init0(project_path: Option<PathBuf>, init_project: bool) -> anyhow::Result<Dirs> {
+async fn init0(project_path: Option<PathBuf>, init_project: bool) -> rootcause::Result<Dirs> {
     let engines_install_dir: PathBuf;
     let download_dir: PathBuf;
     let cache_dir: PathBuf;
@@ -27,7 +27,7 @@ async fn init0(project_path: Option<PathBuf>, init_project: bool) -> anyhow::Res
         None => {
             // empty strings for qualifier and org name are fine
             let project_dirs = ProjectDirs::from("", "", "gdm")
-                .ok_or(anyhow!("Could not read global directories"))?;
+                .ok_or(report!("Could not read global directories"))?;
             cache_dir = project_dirs.cache_dir().to_path_buf();
             let data_local_dir = project_dirs.data_local_dir().to_path_buf();
 
@@ -60,6 +60,6 @@ async fn init0(project_path: Option<PathBuf>, init_project: bool) -> anyhow::Res
     Ok(result)
 }
 
-pub async fn init_no_project() -> anyhow::Result<Dirs> {
+pub async fn init_no_project() -> rootcause::Result<Dirs> {
     init0(None, false).await
 }
