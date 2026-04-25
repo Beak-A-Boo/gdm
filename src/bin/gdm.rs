@@ -59,10 +59,10 @@ enum Commands {
 #[derive(Subcommand)]
 enum EngineCommands {}
 
+#[dotenvy::load(required = false)]
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
-    dotenvy::dotenv().ok();
 
     match cli.command {
         Commands::Upgrade { path } => {

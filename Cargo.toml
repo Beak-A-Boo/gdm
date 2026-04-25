@@ -15,7 +15,7 @@ path = "src/bin/update.rs"
 [dependencies]
 clap = { version = "4.6.1", features = ["derive"] }
 directories = "6.0.0"
-dotenvy = "0.15.7"
+dotenvy = { git = "https://github.com/allan2/dotenvy", rev = "fa25166994d6978bd2e002f0ed190c0c39674ebe", version = "0.15.7", features = ["macros"] }
 dunce = "1.0.5"
 futures-util = "0.3.31"
 indicatif = "0.17.9"
