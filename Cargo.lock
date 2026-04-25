@@ -711,7 +711,6 @@ dependencies = [
 name = "gdm"
 version = "0.0.0"
 dependencies = [
- "anyhow",
  "built",
  "clap",
  "const_format",
