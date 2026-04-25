@@ -1,7 +1,5 @@
 use std::{fs, path::PathBuf};
-
-use serde_derive::{Deserialize, Serialize};
-
+use serde::{Deserialize, Serialize};
 use crate::util::os::OS;
 use crate::util::{archive, download};
 

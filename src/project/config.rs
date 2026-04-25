@@ -4,8 +4,7 @@ use std::str;
 use crate::util::dirs::Dirs;
 use crate::util::os::OS;
 use anyhow::bail;
-use serde_derive::{Deserialize, Serialize};
-
+use serde::{Deserialize, Serialize};
 use super::{engine::EngineVersion, versions, Project};
 
 #[derive(Deserialize, Serialize, Debug)]
