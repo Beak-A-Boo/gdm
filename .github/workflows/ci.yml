@@ -63,10 +63,10 @@ jobs:
             target_name: x86
             cargo_cmd: cargo
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Set up Rust toolchain
         if: ${{ matrix.cargo_cmd != 'cross' }}
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
         with:
           toolchain: stable
           targets: ${{ matrix.target }}
@@ -76,7 +76,7 @@ jobs:
           cargo install cross
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       - name: Cache
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
         with:
           shared-key: "${{ matrix.os }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}"
       - name: Test
@@ -85,11 +85,17 @@ jobs:
         run: "${{ matrix.cargo_cmd }} build --locked --verbose --target ${{ matrix.target }}"
       - name: Upload Artifacts
         id: upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ needs.init.outputs.REPOSITORY_NAME }}-${{ matrix.os_name }}-${{ matrix.target_name }}-${{ github.sha }}
           if-no-files-found: error
           path: |
+            target/${{ matrix.target }}/debug/gdm*
+            !target/${{ matrix.target }}/debug/gdm*.d
+      - name: Generate Build Attestation
+        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v4.1.0
+        with:
+          subject-path: |
             target/${{ matrix.target }}/debug/gdm*
             !target/${{ matrix.target }}/debug/gdm*.d
       - name: Publish Artifacts
@@ -104,14 +110,14 @@ jobs:
       - init
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Set up Rust toolchain
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
         with:
           toolchain: stable
           targets: x86_64-apple-darwin, aarch64-apple-darwin
       - name: Cache
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
         with:
           shared-key: "macos-latest-${{ hashFiles('**/Cargo.lock') }}"
       - name: Test
@@ -127,11 +133,17 @@ jobs:
           lipo -create -output target/combined/gdm-update target/x86_64-apple-darwin/debug/gdm-update target/aarch64-apple-darwin/debug/gdm-update
       - name: Upload Artifact
         id: upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ needs.init.outputs.REPOSITORY_NAME }}-macos-universal-${{ github.sha }}
           if-no-files-found: error
           path: |
+            target/combined/gdm*
+            !target/combined/gdm*.d
+      - name: Generate Build Attestation
+        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v4.1.0
+        with:
+          subject-path: |
             target/combined/gdm*
             !target/combined/gdm*.d
       - name: Publish Artifacts
@@ -139,3 +151,17 @@ jobs:
         run: |
           curl -fsSL -H "Authorization: Bearer ${{ github.token }}" -o artifact.zip "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${{ steps.upload.outputs.artifact-id }}/zip"
           curl -fsSL -H "X-Api-Key: ${{ secrets.ARTIFACT_SERVER_TOKEN }}" -X PUT --form "file=@artifact.zip" ${{ secrets.ARTIFACT_SERVER_UPLOAD_URL }}/${{ needs.init.outputs.REPOSITORY_NAME }}/${{ needs.init.outputs.BUILD_TIME }}/${{ needs.init.outputs.REPOSITORY_NAME }}-macos-universal-${{ needs.init.outputs.BUILD_TIME }}.zip
+
+  dependency_info:
+    name: Submit Dependency Information
+    needs:
+      - build_matrix
+      - build_macOS
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Collect and submit dependency information
+        uses: advanced-security/component-detection-dependency-submission-action@9c110eb34dee187cd9eca76a652b9f6a0ed22927 # v0.1.1
