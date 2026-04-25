@@ -1,6 +1,6 @@
-use std::{fs, path::PathBuf};
-use rootcause::bail;
 use crate::util::dirs::Dirs;
+use rootcause::bail;
+use std::{fs, path::PathBuf};
 
 pub mod config;
 pub mod engine;

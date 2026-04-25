@@ -1,9 +1,9 @@
-use std::{fs, path::PathBuf};
-use serde::{Deserialize, Serialize};
 use crate::util::os::OS;
 use crate::util::{archive, download};
+use serde::{Deserialize, Serialize};
+use std::{fs, path::PathBuf};
 
-use super::{engine::EngineVersion, Project};
+use super::{Project, engine::EngineVersion};
 
 #[derive(Serialize, Deserialize, Debug)]
 struct GithubReleaseResponse {

@@ -1,8 +1,8 @@
 use directories::ProjectDirs;
 use path_clean::PathClean;
+use rootcause::report;
 use std::env;
 use std::path::PathBuf;
-use rootcause::report;
 use tokio::fs;
 
 #[derive(Debug, Clone)]

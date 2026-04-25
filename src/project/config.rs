@@ -1,10 +1,10 @@
-use core::fmt;
-use std::str;
-use rootcause::bail;
+use super::{Project, engine::EngineVersion, versions};
 use crate::util::dirs::Dirs;
 use crate::util::os::OS;
+use core::fmt;
+use rootcause::bail;
 use serde::{Deserialize, Serialize};
-use super::{engine::EngineVersion, versions, Project};
+use std::str;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct ProjectConfiguration {

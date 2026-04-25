@@ -4,8 +4,8 @@ use super::archive;
 use crate::util::dirs::Dirs;
 use futures_util::StreamExt;
 use indicatif::{ProgressBar, ProgressStyle};
-use rand::prelude::ThreadRng;
 use rand::Rng;
+use rand::prelude::ThreadRng;
 use reqwest::Client;
 use thiserror::Error;
 

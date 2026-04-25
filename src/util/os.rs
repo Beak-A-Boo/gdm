@@ -1,6 +1,6 @@
+use rootcause::bail;
 use std::cmp::PartialEq;
 use std::path::PathBuf;
-use rootcause::bail;
 
 #[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
