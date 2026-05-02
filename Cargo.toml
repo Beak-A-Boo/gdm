@@ -27,7 +27,7 @@ serde_json = "1.0.149"
 serde_with = "3.18.0"
 thiserror = "2.0.18"
 tokio = { version = "1.52.1", features = ["full"] }
-zip = "8.5.1"
+zip = "8.6.0"
 const_format = "0.2.36"
 rootcause = "0.12.1"
 
