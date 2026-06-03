@@ -32,4 +32,4 @@ const_format = "0.2.36"
 rootcause = "0.12.1"
 
 [build-dependencies]
-built = { version = "0.8.0", features = ["git2"] }
+built = { version = "0.8.1", features = ["git2"] }
