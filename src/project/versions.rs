@@ -24,8 +24,8 @@ pub async fn download_from_github(
     project: &Project,
 ) -> Result<u64, download::DownloadError> {
     let url = format!(
-        "https://github.com/godotengine/godot/releases/download/{}/{}",
-        &project.config.version, filename
+        "https://github.com/godotengine/godot/releases/download/{version}/{filename}",
+        version = project.config.version,
     );
     download::download_file(url, path, &project.dirs).await
 }
@@ -43,7 +43,7 @@ pub async fn ensure_version_installed(project: &Project) -> rootcause::Result<()
     if !engine_file.exists() {
         println!("Could not find matching version of Godot engine locally, downloading...");
 
-        let zip_file_name = format!("{}.zip", &engine_name);
+        let zip_file_name = format!("{engine_name}.zip");
 
         let zip_file_path = dirs.cache_dir.join("engines").join(&zip_file_name);
 
@@ -52,9 +52,9 @@ pub async fn ensure_version_installed(project: &Project) -> rootcause::Result<()
         match project.config.download_source {
             EngineDownloadSource::GitHub => {
                 let zip_file_name_remote = match (os, config.mono) {
-                    (OS::Windows, false) => format!("{}.exe.zip", &engine_name),
-                    (OS::MacOS, _) => format!("{}.universal.zip", &engine_name),
-                    (_, _) => format!("{}.zip", &engine_name),
+                    (OS::Windows, false) => format!("{engine_name}.exe.zip"),
+                    (OS::MacOS, _) => format!("{engine_name}.universal.zip"),
+                    (_, _) => format!("{engine_name}.zip"),
                 };
 
                 download_from_github(&zip_file_path, &zip_file_name_remote, project)
@@ -79,9 +79,9 @@ pub async fn ensure_version_installed(project: &Project) -> rootcause::Result<()
                     .get_os_string(project.config.mono)?
                     .to_string();
                 let zip_file_name_remote = match (os, config.mono) {
-                    (OS::Windows, false) => format!("{}.exe.zip", &os_arch_slug),
-                    (OS::MacOS, _) => format!("{}.universal.zip", &os_arch_slug),
-                    (_, _) => format!("{}.zip", &os_arch_slug),
+                    (OS::Windows, false) => format!("{os_arch_slug}.exe.zip"),
+                    (OS::MacOS, _) => format!("{os_arch_slug}.universal.zip"),
+                    (_, _) => format!("{os_arch_slug}.zip"),
                 };
 
                 let os_arch_name = format!(
@@ -115,10 +115,7 @@ pub async fn ensure_version_installed(project: &Project) -> rootcause::Result<()
             fs::remove_dir_all(&dirs.download_dir)?;
         }
 
-        println!(
-            "Successfully installed Godot engine version {}",
-            &engine_name
-        )
+        println!("Successfully installed Godot engine version {engine_name}")
     }
 
     Ok(())

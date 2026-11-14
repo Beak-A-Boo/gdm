@@ -79,7 +79,7 @@ impl Default for OS {
 
 impl OS {
     pub fn current() -> OS {
-        CURRENT_OS.clone()
+        CURRENT_OS
     }
 
     pub fn is_windows(&self) -> bool {

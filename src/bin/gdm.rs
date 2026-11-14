@@ -72,7 +72,7 @@ async fn main() -> rootcause::Result<()> {
                 Ok(mut project) => {
                     println!(
                         "Found existing project: {name}, Godot Engine v{engine_version}!",
-                        name = &project.name,
+                        name = project.name,
                         engine_version = project.config.version
                     );
                     let version = project.config.download_source.get_latest_version().await?;
@@ -94,7 +94,7 @@ async fn main() -> rootcause::Result<()> {
                     let project = ProjectConfiguration::init(&dirs, false).await?;
                     println!(
                         "Successfully initialized new project: {name}, Godot Engine v{engine_version}",
-                        name = &project.name,
+                        name = project.name,
                         engine_version = project.config.version
                     );
 
@@ -121,7 +121,7 @@ async fn main() -> rootcause::Result<()> {
                 Ok(project) => {
                     println!(
                         "Found existing project: {name}, Godot Engine v{engine_version}, aborting!",
-                        name = &project.name,
+                        name = project.name,
                         engine_version = project.config.version
                     );
 
@@ -131,7 +131,7 @@ async fn main() -> rootcause::Result<()> {
                     let project = ProjectConfiguration::init(&dirs, mono).await?;
                     println!(
                         "Successfully initialized new project: {name}, Godot Engine v{engine_version}",
-                        name = &project.name,
+                        name = project.name,
                         engine_version = project.config.version
                     );
 

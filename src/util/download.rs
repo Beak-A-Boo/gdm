@@ -57,7 +57,7 @@ pub async fn download_file(
         pb.set_style(ProgressStyle::default_bar()
         .template("{msg}\n{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({bytes_per_sec}, {eta})").unwrap()
         .progress_chars("#>-"));
-        pb.set_message(format!("Downloading {}", url));
+        pb.set_message(format!("Downloading {url}"));
 
         let mut file = fs::File::create(&tmp_file)?;
         let mut downloaded: u64 = 0;
@@ -69,7 +69,7 @@ pub async fn download_file(
             pb.set_position(cmp::min(downloaded, total_size));
         }
         pb.set_position(total_size);
-        pb.finish_with_message(format!("Downloaded {} bytes", downloaded));
+        pb.finish_with_message(format!("Downloaded {downloaded} bytes"));
         local_path
             .parent()
             .map(fs::create_dir_all)

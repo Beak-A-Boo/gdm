@@ -39,7 +39,7 @@ impl str::FromStr for EngineDownloadSource {
         match s.to_lowercase().as_str() {
             "github" | "github.com" => Ok(EngineDownloadSource::GitHub),
             "godotengine.org" => Ok(EngineDownloadSource::GodotEngineOrg),
-            _ => Err(format!("Invalid download source: {}", s)),
+            _ => Err(format!("Invalid download source: {s}")),
         }
     }
 }
@@ -122,7 +122,7 @@ impl ProjectConfiguration {
         let os_string = os.get_os_string(self.mono).expect("Invalid OS");
         let engine_name = self.version.to_string().clone();
 
-        format!("Godot_v{}_{}", engine_name, os_string)
+        format!("Godot_v{engine_name}_{os_string}")
     }
 
     pub fn get_engine_file_name(&self, console: bool) -> String {
