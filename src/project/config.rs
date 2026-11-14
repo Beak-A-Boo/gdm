@@ -16,13 +16,19 @@ pub struct ProjectConfiguration {
 #[derive(Debug, serde_with::DeserializeFromStr)]
 pub enum EngineDownloadSource {
     GitHub,
+    GodotEngineOrg,
 }
 
 impl fmt::Display for EngineDownloadSource {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            EngineDownloadSource::GitHub => write!(f, "github"),
-        }
+        write!(
+            f,
+            "{}",
+            match self {
+                EngineDownloadSource::GitHub => "github.com",
+                EngineDownloadSource::GodotEngineOrg => "godotengine.org",
+            }
+        )
     }
 }
 
@@ -31,7 +37,8 @@ impl str::FromStr for EngineDownloadSource {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "github" => Ok(EngineDownloadSource::GitHub),
+            "github" | "github.com" => Ok(EngineDownloadSource::GitHub),
+            "godotengine.org" => Ok(EngineDownloadSource::GodotEngineOrg),
             _ => Err(format!("Invalid download source: {}", s)),
         }
     }
@@ -50,6 +57,9 @@ impl EngineDownloadSource {
     pub async fn get_latest_version(&self) -> rootcause::Result<EngineVersion> {
         match self {
             EngineDownloadSource::GitHub => Ok(versions::get_latest_version_from_github().await?),
+            EngineDownloadSource::GodotEngineOrg => {
+                Ok(versions::get_latest_version_from_github().await?)
+            } // TODO custom parsing for godotengine.org
         }
     }
 }

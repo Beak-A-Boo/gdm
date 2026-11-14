@@ -6,9 +6,9 @@ use zip::result::ZipError;
 #[derive(Error, Debug)]
 pub enum ExtractError {
     #[error("IO Error")]
-    IoError(#[from] std::io::Error),
+    IoError(#[from] io::Error),
     #[error("Zip Error")]
-    ZipError(#[from] zip::result::ZipError),
+    ZipError(#[from] ZipError),
 }
 
 pub fn extract(
@@ -39,7 +39,7 @@ pub fn extract(
 
         let outpath = target_directory.join(relative_path);
 
-        if (*file.name()).ends_with('/') {
+        if file.is_dir() {
             fs::create_dir_all(&outpath)?;
         } else {
             if let Some(p) = outpath.parent() {

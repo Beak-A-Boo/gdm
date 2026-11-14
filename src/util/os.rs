@@ -3,7 +3,7 @@ use std::cmp::PartialEq;
 use std::path::PathBuf;
 
 #[allow(dead_code)]
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum OS {
     Windows,
     Linux,
@@ -62,6 +62,15 @@ const CURRENT_ARCH: Arch = Arch::ARM32;
 #[cfg(target_arch = "aarch64")]
 const CURRENT_ARCH: Arch = Arch::ARM64;
 
+impl Arch {
+    pub fn get_bits(&self) -> u8 {
+        match self {
+            Arch::X86 | Arch::ARM32 => 32,
+            _ => 64,
+        }
+    }
+}
+
 impl Default for OS {
     fn default() -> Self {
         OS::current()
@@ -99,6 +108,14 @@ impl OS {
             (OS::Linux, Arch::ARM64, true) => Ok("mono_linux_arm64"),
             (OS::MacOS, _, false) => Ok("macos.universal"),
             (OS::MacOS, _, true) => Ok("mono_macos.universal"),
+        }
+    }
+
+    pub fn get_os_name(&self) -> &'static str {
+        match self {
+            OS::Windows => "windows",
+            OS::Linux => "linux",
+            OS::MacOS => "macos",
         }
     }
 }

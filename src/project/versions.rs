@@ -1,9 +1,10 @@
+use super::{Project, engine::EngineVersion};
+use crate::project::config::EngineDownloadSource;
 use crate::util::os::OS;
 use crate::util::{archive, download};
+use rootcause::prelude::ResultExt;
 use serde::{Deserialize, Serialize};
 use std::{fs, path::PathBuf};
-
-use super::{Project, engine::EngineVersion};
 
 #[derive(Serialize, Deserialize, Debug)]
 struct GithubReleaseResponse {
@@ -19,7 +20,7 @@ pub async fn get_latest_version_from_github() -> Result<EngineVersion, download:
 
 pub async fn download_from_github(
     path: &PathBuf,
-    filename: String,
+    filename: &str,
     project: &Project,
 ) -> Result<u64, download::DownloadError> {
     let url = format!(
@@ -44,14 +45,57 @@ pub async fn ensure_version_installed(project: &Project) -> rootcause::Result<()
 
         let zip_file_name = format!("{}.zip", &engine_name);
 
-        let zip_file_name_remote = if OS::current().is_windows() && !config.mono {
-            format!("{}.exe.zip", &engine_name)
-        } else {
-            format!("{}.zip", &engine_name)
-        };
         let zip_file_path = dirs.cache_dir.join("engines").join(&zip_file_name);
 
-        download_from_github(&zip_file_path, zip_file_name_remote, project).await?;
+        let os = OS::current();
+
+        match project.config.download_source {
+            EngineDownloadSource::GitHub => {
+                let zip_file_name_remote = match (os, config.mono) {
+                    (OS::Windows, false) => format!("{}.exe.zip", &engine_name),
+                    (OS::MacOS, _) => format!("{}.universal.zip", &engine_name),
+                    (_, _) => format!("{}.zip", &engine_name),
+                };
+
+                download_from_github(&zip_file_path, &zip_file_name_remote, project)
+                    .await
+                    .context_with(|| {
+                        format!(
+                            "path: {zip_path}, remote: {zip_file_name_remote}",
+                            zip_path = zip_file_path.display()
+                        )
+                    })?;
+            }
+            EngineDownloadSource::GodotEngineOrg => {
+                let version_major = project.config.version.version_string.clone();
+                let version_build = project
+                    .config
+                    .version
+                    .build_string
+                    .as_deref()
+                    .unwrap_or("stable");
+
+                let os_arch_slug = OS::current()
+                    .get_os_string(project.config.mono)?
+                    .to_string();
+                let zip_file_name_remote = match (os, config.mono) {
+                    (OS::Windows, false) => format!("{}.exe.zip", &os_arch_slug),
+                    (OS::MacOS, _) => format!("{}.universal.zip", &os_arch_slug),
+                    (_, _) => format!("{}.zip", &os_arch_slug),
+                };
+
+                let os_arch_name = format!(
+                    "{os_name}.{os_bits}",
+                    os_name = os.get_os_name(),
+                    os_bits = os.architecture().get_bits()
+                );
+
+                let url = format!(
+                    "https://downloads.godotengine.org/?version={version_major}&flavor={version_build}&slug={zip_file_name_remote}&platform={os_arch_name}"
+                );
+                download::download_file(url, &zip_file_path, &project.dirs).await?;
+            }
+        }
 
         println!("Extracting archive...");
         archive::extract(&zip_file_path, &engine_dir, Some(true))?;
