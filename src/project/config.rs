@@ -16,8 +16,6 @@ pub struct ProjectConfiguration {
 #[derive(Debug, serde_with::DeserializeFromStr)]
 pub enum EngineDownloadSource {
     GitHub,
-    // TODO add tuxfamily
-    // https://downloads.tuxfamily.org/godotengine/
 }
 
 impl fmt::Display for EngineDownloadSource {
